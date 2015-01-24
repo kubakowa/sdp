@@ -1,5 +1,5 @@
 #include "SDPArduino.h"
-#include "MotorsControl.h"
+#include "SerialCommand.h"
 #include <Wire.h>
 
 /* Motors assignment */
@@ -10,93 +10,118 @@
 
 #define MAX_SPEED 100
 
-/* Define commands */
-#define STOP 0          
-#define FORWARD_10CM 1  
-#define FORWARD_50CM 2  
-#define BACKWARD_20CM 3 
-#define SPIN_LEFT 4     
-#define SPIN_RIGHT 5
-#define KICK 6
+/* Times assignment */
+int FORWARD_10_TIME = 300;
+int FORWARD_50_TIME = 1200;
+int BACKWARD_20_TIME = 400;
+int KICK_TIME = 300;
+int PASS_TIME = 250;
+int GRAB_TIME = 200;
+int SPIN_TIME = 500;
+
+// command
+SerialCommand comm;
+
+void setupCommands() {
+  comm.addCommand("MOVE_FORWARD_10_CM", forward10);
+  comm.addCommand("MOVE_FORWARD_50_CM", forward50);
+  comm.addCommand("MOVE_BACKWARD_20_CM", backward20);
+  comm.addCommand("KICK", kick);
+  comm.addCommand("PASS", pass);
+  comm.addCommand("GRAB", grab);
+  comm.addCommand("STOP", stop);
+  comm.addCommand("SPIN_CLOCKWISE", spin_clockwise);
+  comm.addCommand("SPIN_ANTICLOCKWISE", spin_anticlockwise);
+  comm.setDefaultHandler(invalid_command);
+  Serial.println("COMMANDS SETUP");
+} 
 
 void setup(){
   SDPsetup();
+  setupCommands();
   Serial.println("SETUP COMPLETE");
 }
 
-// the command buffer
-byte command;  
+void forward10() {
+   Serial.println("FORWARD 10CM");
+   Serial.println("L: F, R: F, B: S");
+   motorForward(LEFT_MOTOR, MAX_SPEED);
+   motorForward(RIGHT_MOTOR, MAX_SPEED);
+   delay(FORWARD_10_TIME);
+   motorAllStop();
+}
+
+void forward50() {
+   Serial.println("FORWARD 50CM");
+   Serial.println("L: F, R: F, B: S");
+   motorForward(LEFT_MOTOR, MAX_SPEED);
+   motorForward(RIGHT_MOTOR, MAX_SPEED);
+   delay(FORWARD_50_TIME);
+   motorAllStop();
+}
+
+void backward20() {
+   Serial.println("BACKWARD 20CM");
+   Serial.println("L: B, R: B, B: S");
+   motorBackward(LEFT_MOTOR, MAX_SPEED);
+   motorBackward(RIGHT_MOTOR, MAX_SPEED);
+   delay(BACKWARD_20_TIME);
+   motorAllStop();
+}
+
+void spin_clockwise() {
+   Serial.println("SPIN CLOCKWISE");
+   Serial.println("L: F, R: B, B: B");
+   motorForward(LEFT_MOTOR, MAX_SPEED);
+   motorBackward(RIGHT_MOTOR, MAX_SPEED);
+   motorBackward(BACK_MOTOR, MAX_SPEED);
+   delay(SPIN_TIME);
+   motorAllStop();
+}
+
+void spin_anticlockwise() {
+   Serial.println("SPIN ANTICLOCKWISE");
+   Serial.println("L: B, R: F, B: F");
+   motorBackward(LEFT_MOTOR, MAX_SPEED);
+   motorForward(RIGHT_MOTOR, MAX_SPEED);
+   motorForward(BACK_MOTOR, MAX_SPEED);
+   delay(SPIN_TIME);
+   motorAllStop();
+}
+
+void kick() {
+   Serial.println("KICK");
+   motorBackward(KICK_MOTOR, MAX_SPEED);
+   delay(KICK_TIME);
+   motorAllStop();
+}
+
+// define with different time or speed
+void pass() {
+   Serial.println("PASS");
+   motorBackward(KICK_MOTOR, MAX_SPEED);
+   delay(PASS_TIME);
+   motorAllStop();
+}
+
+void grab() {
+   Serial.println("GRAB");
+   motorForward(KICK_MOTOR, MAX_SPEED);
+   delay(GRAB_TIME);
+   motorAllStop();
+}
+
+void invalid_command(const char* command) {
+   Serial.print("UNKNOWN COMMAND: "); 
+   Serial.println(command);
+}
+
+void stop() {
+   Serial.println("STOP");
+   motorAllStop();
+}
 
 void loop() {
   // if command received
-  if (Serial.available()>=1)
-  {
-    command = Serial.read() - '0';
-    switch (command) {
-      case STOP:
-        motorAllStop();
-        Serial.println("STOP");
-        break;
-        
-      case FORWARD_10CM:
-        Serial.println("FORWARD 10CM");
-        Serial.println("L: F, R: F, B: S");
-        motorForward(LEFT_MOTOR, MAX_SPEED);
-        motorForward(RIGHT_MOTOR, MAX_SPEED);
-        delay(800);
-        motorAllStop();
-        break;
-        
-      case FORWARD_50CM:
-        Serial.println("FORWARD 50CM");
-        Serial.println("L: F, R: F, B: S");
-        motorForward(LEFT_MOTOR, MAX_SPEED);
-        motorForward(RIGHT_MOTOR, MAX_SPEED);
-        delay(1500);
-        motorAllStop();
-        break; 
-        
-      case BACKWARD_20CM:
-        Serial.println("BACKWARD 20CM");
-        motorBackward(LEFT_MOTOR, MAX_SPEED);
-        motorBackward(RIGHT_MOTOR, MAX_SPEED);
-        delay(5000);
-        motorAllStop();
-        break; 
-        
-      case SPIN_LEFT:
-        Serial.println("SPIN LEFT");
-        motorForward(LEFT_MOTOR, 
-        MAX_SPEED);
-        motorBackward(RIGHT_MOTOR, MAX_SPEED);
-        motorBackward(BACK_MOTOR, MAX_SPEED);
-        delay(5000);
-        motorAllStop();
-        break;
-        
-      case SPIN_RIGHT: 
-        Serial.println("SPIN LEFT");
-        motorBackward(LEFT_MOTOR, MAX_SPEED);
-        motorForward(RIGHT_MOTOR, MAX_SPEED);
-        motorForward(BACK_MOTOR, MAX_SPEED);
-        delay(5000);
-        motorAllStop();
-        break;
-      
-      case KICK:
-        Serial.println("KICK");
-        motorBackward(KICK_MOTOR, MAX_SPEED);
-        delay(500);
-        motorAllStop();
-        break;
-      
-      // handle new line
-      case (byte) ('\n' - '0'):
-        break;
-        
-      default:
-        Serial.println("UNKNOWN COMMAND");
-        break;
-    } 
-  }
+  comm.readSerial();
 }
