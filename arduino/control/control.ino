@@ -9,33 +9,36 @@
 #define KICK_MOTOR 3
 
 #define MAX_SPEED 100
-#define COUNTER_SPEED 92 /* To counter-act the difference in motors */
+#define COUNTER_SPEED 98 /* To counter-act the difference in motors */
+#define PASS_SPEED 80
 
 /* Times assignment */
-int FORWARD_10_TIME = 475;
-int FORWARD_50_TIME = 1750;
-int BACKWARD_20_TIME = 950;
+int FORWARD_10_TIME = 400;
+int FORWARD_50_TIME = 1600;
+int BACKWARD_20_TIME = 750;
 int KICK_TIME = 300;
-int PASS_TIME = 250;
+int PASS_TIME = 200;
 int GRAB_TIME = 200;
-int SPIN_TIME = 500;
+int SPIN_TIME = 10000;
 
 // command
 SerialCommand comm;
 
 void setupCommands() {
-  comm.addCommand("MOVE10", forward10);
-  comm.addCommand("MOVE50", forward50);  
-  comm.addCommand("BACK20", backward20);
-  comm.addCommand("KICK", kick);
-  comm.addCommand("PASS", pass);
-  comm.addCommand("GRAB", grab);
-  comm.addCommand("STOP", stop);
-  comm.addCommand("SPINC", spin_clockwise);
-  comm.addCommand("SPINA", spin_anticlockwise);
-  comm.addCommand("MOTOR_ONE", move_motor_one); /* For testing purposes */
-  comm.addCommand("MOTOR_TWO", move_motor_two);
-  comm.addCommand("MOTOR_THREE", move_motor_three);
+  comm.addCommand("BB_MOVE10", forward10);
+  comm.addCommand("BB_FORWARD50", forward50);  
+  comm.addCommand("BB_BACK20", backward20);
+  comm.addCommand("BB_KICK", kick);
+  comm.addCommand("BB_PASS", pass);
+  comm.addCommand("BB_GRAB", grab);
+  comm.addCommand("BB_STOP", stop);
+  comm.addCommand("BB_SPINC", spin_clockwise);
+  comm.addCommand("BB_SPINA", spin_anticlockwise);
+  comm.addCommand("BB_GM", go_mad);
+  /* For testing purposes */
+  comm.addCommand("BB_MOTOR_ONE", move_motor_one); 
+  comm.addCommand("BB_MOTOR_TWO", move_motor_two);
+  comm.addCommand("BB_MOTOR_THREE", move_motor_three);
   comm.setDefaultHandler(invalid_command);
   Serial.println("COMMANDS SETUP");
 } 
@@ -114,6 +117,13 @@ void spin_anticlockwise() {
    motorAllStop();
 }
 
+void go_mad() {
+   Serial.println("GO MAD!");
+   spin_clockwise();
+   delay(500);
+   spin_anticlockwise();
+}
+
 void kick() {
    Serial.println("KICK");
    motorBackward(KICK_MOTOR, MAX_SPEED);
@@ -121,16 +131,17 @@ void kick() {
    motorAllStop();
 }
 
-// define with different time or speed
 void pass() {
    Serial.println("PASS");
-   motorBackward(KICK_MOTOR, MAX_SPEED);
+   motorBackward(KICK_MOTOR, PASS_SPEED);
    delay(PASS_TIME);
    motorAllStop();
 }
 
 void grab() {
    Serial.println("GRAB");
+   motorBackward(KICK_MOTOR, MAX_SPEED);
+   delay(GRAB_TIME);
    motorForward(KICK_MOTOR, MAX_SPEED);
    delay(GRAB_TIME);
    motorAllStop();
