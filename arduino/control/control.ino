@@ -9,11 +9,12 @@
 #define KICK_MOTOR 3
 
 #define MAX_SPEED 100
+#define COUNTER_SPEED 92 /* To counter-act the difference in motors */
 
 /* Times assignment */
-int FORWARD_10_TIME = 300;
-int FORWARD_50_TIME = 1200;
-int BACKWARD_20_TIME = 400;
+int FORWARD_10_TIME = 475;
+int FORWARD_50_TIME = 1750;
+int BACKWARD_20_TIME = 950;
 int KICK_TIME = 300;
 int PASS_TIME = 250;
 int GRAB_TIME = 200;
@@ -23,15 +24,18 @@ int SPIN_TIME = 500;
 SerialCommand comm;
 
 void setupCommands() {
-  comm.addCommand("MOVE_FORWARD_10_CM", forward10);
-  comm.addCommand("MOVE_FORWARD_50_CM", forward50);
-  comm.addCommand("MOVE_BACKWARD_20_CM", backward20);
+  comm.addCommand("MOVE10", forward10);
+  comm.addCommand("MOVE50", forward50);  
+  comm.addCommand("BACK20", backward20);
   comm.addCommand("KICK", kick);
   comm.addCommand("PASS", pass);
   comm.addCommand("GRAB", grab);
   comm.addCommand("STOP", stop);
-  comm.addCommand("SPIN_CLOCKWISE", spin_clockwise);
-  comm.addCommand("SPIN_ANTICLOCKWISE", spin_anticlockwise);
+  comm.addCommand("SPINC", spin_clockwise);
+  comm.addCommand("SPINA", spin_anticlockwise);
+  comm.addCommand("MOTOR_ONE", move_motor_one); /* For testing purposes */
+  comm.addCommand("MOTOR_TWO", move_motor_two);
+  comm.addCommand("MOTOR_THREE", move_motor_three);
   comm.setDefaultHandler(invalid_command);
   Serial.println("COMMANDS SETUP");
 } 
@@ -42,11 +46,32 @@ void setup(){
   Serial.println("SETUP COMPLETE");
 }
 
+void move_motor_one() {
+  Serial.println("MOTOR ONE MOVING");
+  motorForward(LEFT_MOTOR, MAX_SPEED);
+  delay(1000);
+  motorAllStop();
+}
+
+void move_motor_two() {
+  Serial.println("MOTOR TWO MOVING");
+  motorForward(RIGHT_MOTOR, MAX_SPEED);
+  delay(1000);
+  motorAllStop();
+}
+
+void move_motor_three() {
+  Serial.println("MOTOR THREE MOVING");
+  motorForward(BACK_MOTOR, MAX_SPEED);
+  delay(1000);
+  motorAllStop();
+}
+
 void forward10() {
    Serial.println("FORWARD 10CM");
    Serial.println("L: F, R: F, B: S");
    motorForward(LEFT_MOTOR, MAX_SPEED);
-   motorForward(RIGHT_MOTOR, MAX_SPEED);
+   motorForward(RIGHT_MOTOR, COUNTER_SPEED);
    delay(FORWARD_10_TIME);
    motorAllStop();
 }
@@ -55,7 +80,7 @@ void forward50() {
    Serial.println("FORWARD 50CM");
    Serial.println("L: F, R: F, B: S");
    motorForward(LEFT_MOTOR, MAX_SPEED);
-   motorForward(RIGHT_MOTOR, MAX_SPEED);
+   motorForward(RIGHT_MOTOR, COUNTER_SPEED);
    delay(FORWARD_50_TIME);
    motorAllStop();
 }
@@ -64,7 +89,7 @@ void backward20() {
    Serial.println("BACKWARD 20CM");
    Serial.println("L: B, R: B, B: S");
    motorBackward(LEFT_MOTOR, MAX_SPEED);
-   motorBackward(RIGHT_MOTOR, MAX_SPEED);
+   motorBackward(RIGHT_MOTOR, COUNTER_SPEED);
    delay(BACKWARD_20_TIME);
    motorAllStop();
 }
