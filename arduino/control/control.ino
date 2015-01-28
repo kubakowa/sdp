@@ -10,7 +10,9 @@
 
 #define MAX_SPEED 100
 #define COUNTER_SPEED 98 /* To counter-act the difference in motors */
-#define PASS_SPEED 80
+#define PASS_SPEED_WEAK 55
+#define PASS_SPEED_STRONG 70
+
 
 /* Times assignment */
 int FORWARD_10_TIME = 400;
@@ -29,7 +31,8 @@ void setupCommands() {
   comm.addCommand("BB_FORWARD50", forward50);  
   comm.addCommand("BB_BACK20", backward20);
   comm.addCommand("BB_KICK", kick);
-  comm.addCommand("BB_PASS", pass);
+  comm.addCommand("BB_WEAK_PASS", weak_pass);
+  comm.addCommand("BB_STRONG_PASS", strong_pass);
   comm.addCommand("BB_GRAB", grab);
   comm.addCommand("BB_STOP", stop);
   comm.addCommand("BB_SPINC", spin_clockwise);
@@ -131,9 +134,16 @@ void kick() {
    motorAllStop();
 }
 
-void pass() {
-   Serial.println("PASS");
-   motorBackward(KICK_MOTOR, PASS_SPEED);
+void weak_pass() {
+   Serial.println("WEAK PASS");
+   motorBackward(KICK_MOTOR, PASS_SPEED_WEAK);
+   delay(PASS_TIME);
+   motorAllStop();
+}
+
+void strong_pass() {
+   Serial.println("STRONG PASS");
+   motorBackward(KICK_MOTOR, PASS_SPEED_STRONG);
    delay(PASS_TIME);
    motorAllStop();
 }
