@@ -24,8 +24,6 @@ void SDPsetup() {
   digitalWrite(8,HIGH); //Pin 8 must be high to turn the radio on!
   Serial.begin(115200); // Serial rate the radio is configured to.
   Wire.begin(); //Makes arduino master of the I2C line.
-  
-  helloWorld();
 }
 
 void helloWorld() {
