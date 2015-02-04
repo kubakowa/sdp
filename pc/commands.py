@@ -1,6 +1,7 @@
 import numpy as np
 import serial
 from math import sin, cos, radians, ceil
+import sys
 
 ALPHA1 = radians(30)
 ALPHA2 = radians(150)
@@ -19,7 +20,8 @@ def generate_speed_coeff_matrix():
 
 def calc_motor_speeds(x, y, w):
     coeffs = speed_coeff_matrix * np.matrix([[-x], [y], [w]])
-    return coeffs * 100 / max(abs(coeffs))
+    coeffs = coeffs * 100 / max(abs(coeffs))
+    return coeffs
 
 class Arduino:
 
@@ -41,6 +43,9 @@ class Arduino:
                     print "No Arduino detected!"
                     print "Continuing without comms."
                     self.comms = 0
+                    #raise
+        else:
+            self.comms = 0
 
     def write(self, string):
         if self.comms == 1:
@@ -50,9 +55,49 @@ class Arduino:
 if __name__ == "__main__":
     generate_speed_coeff_matrix()
     comms = Arduino('/dev/ttyACM0', 115200, 1, 1)
-    speeds = calc_motor_speeds(0, 0, -1)
-    print(speeds)
-    command = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
-    print(command)
-    comms.write(command)
+    while (1):
+        command = raw_input('Name your command (w, s, a, d, k, o, c, q, 1, 2)')
+        #command = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
+        
+        if command == 'w':
+            speeds = calc_motor_speeds(0, 1, 0)
+            comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
+        
+        elif command == 's': 
+            speeds = calc_motor_speeds(0, -1, 0)
+            comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
+            
+        elif command == 'a': 
+            speeds = calc_motor_speeds(-1, 0, 0)
+            comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
+            
+        elif command == 'd': 
+            speeds = calc_motor_speeds(1, 0, 0)
+            comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
+            
+        elif command == '1':
+            speeds = calc_motor_speeds(0, 0, 1)
+            comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
+            
+        elif command == '2':
+            speeds = calc_motor_speeds(0, 0, -1)
+            comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])    
+                
+        elif command == 'q':
+            comm = 'BB_STOP\n'
+            
+        elif command == 'k':
+            comm = 'BB_KICK\n'
+            
+        elif command == 'o':
+            comm = 'BB_OPEN\n'
+        
+        elif command == 'c':
+            comm = 'BB_CLOSE\n'
+            
+        else:
+            print('You fool, unknown command :/')
+         
+          
+        comms.write(comm)
     

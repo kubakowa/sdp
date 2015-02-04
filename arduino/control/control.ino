@@ -8,14 +8,13 @@
 #define BACK_MOTOR 2
 #define KICK_MOTOR 3
 
-/* Times assignment */
-int FORWARD_10_TIME = 400;
-int FORWARD_50_TIME = 1600;
-int BACKWARD_20_TIME = 750;
+/* Constants */
 int KICK_TIME = 300;
-int PASS_TIME = 200;
 int GRAB_TIME = 200;
-int SPIN_TIME = 10000;
+int CLOSE_TIME = 150;
+int MAX_SPEED = 100;
+int GRAB_SPEED = 10;
+
 
 // command
 SerialCommand comm;
@@ -23,6 +22,9 @@ SerialCommand comm;
 void setupCommands() {
   comm.addCommand("BB_MOVE", make_move);
   comm.addCommand("BB_KICK", make_kick);
+  comm.addCommand("BB_OPEN", open_grabber);
+  comm.addCommand("BB_CLOSE", close_grabber);
+  comm.addCommand("BB_STOP", make_stop);
 } 
 
 void setup(){
@@ -50,34 +52,44 @@ void make_move() {
     back_speed = atoi(back_m);
   }
   
-  Serial.println(left_speed < 0);
-  Serial.println(right_speed < 0);
-  Serial.println(back_speed < 0);
-  
   if (left_speed > 0)
     motorForward(LEFT_MOTOR, left_speed);
-  
-  if (left_speed < 0)
+  else if (left_speed < 0)
     motorBackward(LEFT_MOTOR, -left_speed);
     
   if (right_speed > 0)
     motorForward(RIGHT_MOTOR, right_speed);
-  
-  if (right_speed < 0)
+  else if (right_speed < 0)
     motorBackward(RIGHT_MOTOR, -right_speed);
       
   if (back_speed > 0)
     motorForward(BACK_MOTOR, back_speed);
-  
-  if (back_speed < 0)  
+  else if (back_speed < 0)  
     motorBackward(BACK_MOTOR, -back_speed);
-    
-  delay(2000);
-  motorAllStop();
 }
 
 void make_kick() {
+  motorBackward(KICK_MOTOR, MAX_SPEED);
+  delay(KICK_TIME);
+  motorStop(KICK_MOTOR);
+}
 
+void open_grabber() {
+  motorBackward(KICK_MOTOR, MAX_SPEED);
+  delay(GRAB_TIME);
+  motorBackward(KICK_MOTOR, GRAB_SPEED);
+}
+
+void close_grabber() {
+  motorForward(KICK_MOTOR, MAX_SPEED);
+  delay(CLOSE_TIME);
+  motorStop(KICK_MOTOR);
+}
+
+void make_stop() {
+  motorStop(LEFT_MOTOR); 
+  motorStop(RIGHT_MOTOR);
+  motorStop(BACK_MOTOR);
 }
 
 void invalid_command(const char* command) { }
