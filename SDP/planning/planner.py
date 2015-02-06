@@ -9,7 +9,7 @@ class Planner:
     def __init__(self, our_side, pitch_num):
         self._world = World(our_side, pitch_num)
         self._world.our_defender.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 12} #10
-        self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 14}
+        self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 0}
 
         # self._defender_defence_strat = DefenderDefence(self._world)
         # self._defender_attack_strat = DefaultDefenderAttack(self._world)
@@ -106,7 +106,7 @@ class Planner:
 
                 return do_nothing()
 
-	#if robot attacker
+    #if robot attacker
         else:
             # If the ball is in their defender zone we defend:
             if self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
@@ -126,7 +126,7 @@ class Planner:
                 elif self._attacker_state == 'grab':
                     # Switch to careful mode if the ball is too close to the wall.
 
-			#BB not really need for milestone 2
+            #BB not really need for milestone 2
                     if abs(self._world.ball.y - self._world.pitch.height) < 0 or abs(self._world.ball.y) < 0:
                         if isinstance(self._attacker_current_strategy, AttackerGrab):
                             self._attacker_current_strategy = AttackerGrabCareful(self._world)

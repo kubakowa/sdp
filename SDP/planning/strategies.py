@@ -435,7 +435,6 @@ class AttackerGrab(Strategy):
 
     PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED = 'PREPARE', 'GO_TO_BALL', 'GRAB_BALL', 'GRABBED'
     STATES = [PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED]
-
     def __init__(self, world):
         super(AttackerGrab, self).__init__(world, self.STATES)
 
@@ -455,6 +454,7 @@ class AttackerGrab(Strategy):
             self.our_attacker.catcher = 'open'
             return open_catcher()
         else:
+        
             return do_nothing()
 
     def position(self):
@@ -1087,7 +1087,6 @@ class AttackerGrabCareful(Strategy):
 
     UNALIGNED, POSITIONED, ALIGNED, GRABBED = 'UNALIGNED', 'POSITIONED', 'ALIGNED', 'GRABBED'
     STATES = [UNALIGNED, POSITIONED, ALIGNED, GRABBED]
-
     BALL_Y_OFFSET = 80
 
     def __init__(self, world):

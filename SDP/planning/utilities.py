@@ -1,8 +1,9 @@
 from math import tan, pi, hypot, log
 from planning.models import Robot
+import ipdb
 
 DISTANCE_MATCH_THRESHOLD = 15
-ANGLE_MATCH_THRESHOLD = pi/10
+ANGLE_MATCH_THRESHOLD = pi/19
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
@@ -94,7 +95,7 @@ def kick_ball():
 
 
 def open_catcher():
-    return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'speed': 1000}
+    return {'left_motor': 0, 'right_motor': 0, 'kicker': 2, 'catcher': 0, 'speed': 1000}
 
 
 def turn_shoot(orientation):
@@ -130,8 +131,17 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
 
         elif abs(angle) > angle_thresh:
-            speed = (angle/pi) * MAX_ANGLE_SPEED
-            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
+            print('angle to ball: %f', angle)
+            #BB
+            if angle<0:
+                speed1=40;
+                speed2=-40;
+            else:
+                speed1=-40;
+                speed2=40;
+
+            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
 
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED

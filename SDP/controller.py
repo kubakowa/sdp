@@ -8,7 +8,7 @@ import cv2
 import serial
 import warnings
 import time
-
+import ipdb
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -92,7 +92,7 @@ class Controller:
                 # model_positions have their y coordinate inverted
 
 
-		#find positions of objects in current preprocessed frame
+        #find positions of objects in current preprocessed frame
                 model_positions, regular_positions = self.vision.locate(frame)
                 model_positions = self.postprocessing.analyze(model_positions)
 
@@ -103,8 +103,8 @@ class Controller:
 
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
-                if self.defender is not None:
-                    self.defender.execute(self.arduino, defender_actions)
+                #BB if self.defender is not None:
+                #BB    self.defender.execute(self.arduino, defender_actions)
 
                 # Information about the grabbers from the world
                 grabbers = {
@@ -230,20 +230,24 @@ class Attacker_Controller(Robot_Controller):
             left_motor = int(action['left_motor'])
             right_motor = int(action['right_motor'])
             command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, 1)
-	    print(command)
-	    comm.write(command)
-            if action['kicker'] != 0:
-                try:
-                    comm.write('BB_KICK\n')
-                except StandardError:
-                    pass
-            elif action['catcher'] != 0:
-                try:
-                    comm.write('BB_OPEN\n')
-                    time.sleep(0.5)
-                    comm.write('BB_CLOSE\n')
-                except StandardError:
-                    pass
+        print(command)
+        comm.write(command)
+        if action['kicker'] == 1:
+            try:
+                comm.write('BB_KICK\n')
+            except StandardError:
+                pass
+        elif  action['kicker'] == 2:
+            try:
+                comm.write('BB_OPEN\n')
+            except StandardError:
+                pass
+            
+        elif action['catcher'] != 0:
+            try:
+                comm.write('BB_CLOSE\n')
+            except StandardError:
+                pass
 
     def shutdown(self, comm):
         comm.write('BB_STOP\n')
