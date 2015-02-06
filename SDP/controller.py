@@ -8,7 +8,6 @@ import cv2
 import serial
 import warnings
 import time
-import ipdb
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
