@@ -33,6 +33,7 @@ cd opencv-2.4.8.1/
 printf "Replacing cl2cpp.cmake file\n"
 #TODO Currently using dropbox, could be more sophisticated here
 wget https://www.dropbox.com/s/qbyln23smdr81vr/cl2cpp.cmake
+mkdir cmake
 mv cl2cpp.cmake cmake/
 
 printf "Running cmake\n"

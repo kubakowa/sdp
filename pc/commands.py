@@ -62,6 +62,7 @@ if __name__ == "__main__":
         if command == 'w':
             speeds = calc_motor_speeds(0, 1, 0)
             comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
+            print(speeds)
         
         elif command == 's': 
             speeds = calc_motor_speeds(0, -1, 0)
@@ -78,11 +79,11 @@ if __name__ == "__main__":
         elif command == '1':
             speeds = calc_motor_speeds(0, 0, 1)
             comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
-            
+            print(speeds)
         elif command == '2':
             speeds = calc_motor_speeds(0, 0, -1)
             comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])    
-                
+            print(speeds)    
         elif command == 'q':
             comm = 'BB_STOP\n'
             
