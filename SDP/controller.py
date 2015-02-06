@@ -220,17 +220,26 @@ class Attacker_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        if 'turn_90' in action:
-            comm.write('BB_MOVE %d %d %d\n' % (-100, 100, 100))
-            time.sleep(0.18)
+        #if 'turn_90' in action:
+           # comm.write('BB_MOVE %d %d %d\n' % (-100, 100, 100))
+            #time.sleep(0.18)
             #comm.write('A_RUN_SHOOT %d\n' % int(action['turn_90']))
             # time.sleep(1.2)
-        else:
-            left_motor = int(action['left_motor'])
-            right_motor = int(action['right_motor'])
-            command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, 1)
+        #else:
+        left_motor = int(action['left_motor'])
+        right_motor = int(action['right_motor'])
+        command = 'BB_MOVE %d %d 1\n' % (left_motor, right_motor)
+
+
         print(command)
         comm.write(command)
+
+        if 'bb_turn' in action:
+            time.sleep(0.3)
+            command = 'BB_STOP\n'
+            print(command)
+            comm.write(command)
+
         if action['kicker'] == 1:
             try:
                 comm.write('BB_KICK\n')

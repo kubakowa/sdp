@@ -2,7 +2,7 @@ from math import tan, pi, hypot, log
 from planning.models import Robot
 
 DISTANCE_MATCH_THRESHOLD = 15
-ANGLE_MATCH_THRESHOLD = pi/19
+ANGLE_MATCH_THRESHOLD = pi/11
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
@@ -127,34 +127,47 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
     if not (displacement is None):
 
         if displacement < DISTANCE_MATCH_THRESHOLD:
+            print 'Displacement:', displacement
+            print 'movement action called while robot is at the ball'
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
 
         elif abs(angle) > angle_thresh:
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
-            print('angle to ball: %f', angle)
+            print 'angle to ball: ', angle
             #BB
             if angle<0:
-                speed1=40;
-                speed2=-40;
+                speed1=60;
+                speed2=-60;
             else:
-                speed1=-40;
-                speed2=40;
+                speed1=-60;
+                speed2=60;
 
-            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+	    returnDict= {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': general_speed, 'bb_turn': 1}
+
+
+            return returnDict
 
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
             speed = -speed if moving_backwards else speed
-            # print 'DISP:', displacement
+            print 'DISP:', displacement
            # if careful:
            #     return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-85)))}
            # return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-30)))}
-	return  {'left_motor': 50, 'right_motor': 50, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': 100}
+	return  {'left_motor': 100, 'right_motor': 100, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': 100}
     else:
 
         if abs(angle) > angle_thresh:
-            speed = (angle/pi) * MAX_ANGLE_SPEED
-            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
+            print('angle to ball (l162)', angle)
+            #BB
+            if angle<0:
+                speed1=60;
+                speed2=-60;
+            else:
+                speed1=-60;
+                speed2=60;
+            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
 
         else:
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
