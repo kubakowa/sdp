@@ -3,7 +3,7 @@ from math import tan, pi, hypot, log
 from planning.models import Robot
 
 DISTANCE_MATCH_THRESHOLD = 15
-ANGLE_MATCH_THRESHOLD = pi/11
+ANGLE_MATCH_THRESHOLD = 0.3
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
@@ -135,15 +135,19 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         elif abs(angle) > angle_thresh:
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
             print 'angle to ball: ', angle
+            if abs(angle)<0.8:
+                bb_speed=0
+            else:
+                bb_speed=1
             #BB
             if angle<0:
-                speed1=100;
-                speed2=-100;
+                speed1=100
+                speed2=-100
             else:
-                speed1=-100;
-                speed2=100;
+                speed1=-100
+                speed2=100
 
-	    returnDict= {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': general_speed, 'bb_turn': 1}
+	    returnDict= {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
 
 
             return returnDict
@@ -161,6 +165,10 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         if abs(angle) > angle_thresh:
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
             print('angle to ball (l162)', angle)
+            if abs(angle)<0.8:
+                bb_speed=0
+            else:
+                bb_speed=1
             #BB
             if angle<0:
                 speed1=100;
@@ -168,7 +176,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
             else:
                 speed1=-100;
                 speed2=100;
-            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': general_speed, 'back_motor': 0}
+            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': 0}
 
         else:
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed, 'back_motor': 0}

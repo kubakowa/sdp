@@ -219,8 +219,8 @@ class Attacker_Controller(Robot_Controller):
         print(command)
         comm.write(command)
 
-        if 'bb_turn' in action:
-            time.sleep(0.3)
+        if ('bb_turn' in action) and (int (action['speed'])==0):
+            time.sleep(0.25)
             command = 'BB_STOP\n'
             print(command)
             comm.write(command)
