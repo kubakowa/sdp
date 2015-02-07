@@ -15,6 +15,10 @@ int CLOSE_TIME = 150;
 int MAX_SPEED = 100;
 int GRAB_SPEED = 10;
 
+int LEFT_SPEED = 0;
+int RIGHT_SPEED = 0;
+int BACK_SPEED = 0;
+
 
 // command
 SerialCommand comm;
@@ -48,7 +52,10 @@ void burst_move(int left_speed,int right_speed, int back_speed) {
     motorForward(BACK_MOTOR, back_speed);
   else if (back_speed < 0)  
     motorBackward(BACK_MOTOR, -back_speed); 
-  
+    
+  LEFT_SPEED = left_speed;
+  RIGHT_SPEED = right_speed;
+  BACK_SPEED = back_speed;
 }
  
 
@@ -96,6 +103,33 @@ void make_stop() {
   motorStop(BACK_MOTOR);
   motorStop(LEFT_MOTOR); 
   motorStop(RIGHT_MOTOR);
+  
+  if (abs(LEFT_SPEED) == abs(RIGHT_SPEED) && abs(BACK_SPEED) == abs(LEFT_SPEED)) {
+    if (LEFT_SPEED < 0)
+      motorForward(LEFT_MOTOR, -LEFT_SPEED);
+    else
+      motorBackward(LEFT_MOTOR, LEFT_SPEED);
+      
+    if (RIGHT_SPEED < 0)
+      motorForward(RIGHT_MOTOR, -RIGHT_SPEED);
+    else
+      motorBackward(RIGHT_MOTOR, RIGHT_SPEED);
+        
+    if (BACK_SPEED < 0)
+      motorForward(BACK_MOTOR, -BACK_SPEED);
+    else
+      motorBackward(BACK_MOTOR, BACK_SPEED); 
+  }
+  
+  delay(500);
+    
+  motorStop(BACK_MOTOR);
+  motorStop(LEFT_MOTOR); 
+  motorStop(RIGHT_MOTOR);
+  
+  LEFT_SPEED = 0;
+  RIGHT_SPEED = 0;
+  BACK_SPEED = 0;
 }
 
 void invalid_command(const char* command) { }
