@@ -33,6 +33,25 @@ void setup(){
   //Serial.println("SETUP COMPLETE");
 }
 
+void burst_move(int left_speed,int right_speed, int back_speed) {
+  if (left_speed > 0)
+    motorForward(LEFT_MOTOR, left_speed);
+  else if (left_speed < 0)
+    motorBackward(LEFT_MOTOR, -left_speed);
+    
+  if (right_speed > 0)
+    motorForward(RIGHT_MOTOR, right_speed);
+  else if (right_speed < 0)
+    motorBackward(RIGHT_MOTOR, -right_speed);
+      
+  if (back_speed > 0)
+    motorForward(BACK_MOTOR, back_speed);
+  else if (back_speed < 0)  
+    motorBackward(BACK_MOTOR, -back_speed); 
+  
+}
+ 
+
 void make_move() {
   char *left_m;
   char *right_m;
@@ -52,20 +71,7 @@ void make_move() {
     back_speed = atoi(back_m);
   }
   
-  if (left_speed > 0)
-    motorForward(LEFT_MOTOR, left_speed);
-  else if (left_speed < 0)
-    motorBackward(LEFT_MOTOR, -left_speed);
-    
-  if (right_speed > 0)
-    motorForward(RIGHT_MOTOR, right_speed);
-  else if (right_speed < 0)
-    motorBackward(RIGHT_MOTOR, -right_speed);
-      
-  if (back_speed > 0)
-    motorForward(BACK_MOTOR, back_speed);
-  else if (back_speed < 0)  
-    motorBackward(BACK_MOTOR, -back_speed);
+  burst_move(left_speed, right_speed, back_speed);
 }
 
 void make_kick() {
@@ -87,9 +93,9 @@ void close_grabber() {
 }
 
 void make_stop() {
+  motorStop(BACK_MOTOR);
   motorStop(LEFT_MOTOR); 
   motorStop(RIGHT_MOTOR);
-  motorStop(BACK_MOTOR);
 }
 
 void invalid_command(const char* command) { }
