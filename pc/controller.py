@@ -101,10 +101,10 @@ class Controller:
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
 
-                if self.attacker is not None:
-                    self.attacker.execute(self.arduino, attacker_actions)
-               # if self.defender is not None:
-               #    self.defender.execute(self.arduino, defender_actions)
+                #if self.attacker is not None:
+                #    self.attacker.execute(self.arduino, attacker_actions)
+                if self.defender is not None:
+                   self.defender.execute(self.arduino, defender_actions)
 
                 # Information about the grabbers from the world
                 grabbers = {
@@ -175,9 +175,6 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-    
-	print action
-  
 	left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
         back_motor = int(action['back_motor'])
@@ -214,9 +211,8 @@ class Attacker_Controller(Robot_Controller):
         left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
         command = 'BB_MOVE %d %d 1\n' % (left_motor, right_motor)
-
-
-        print(command)
+       
+	print(command)
         comm.write(command)
 
         if ('bb_turn' in action) and (int (action['speed'])==0):

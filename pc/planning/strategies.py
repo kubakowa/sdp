@@ -64,7 +64,7 @@ class DefenderDefend(Strategy):
         if is_facing_target(self.our_defender.get_rotation_to_point(self.their_goal.x, self.their_goal.y)):
             # Correct direction, ready to move
             self.current_state = self.POS_UNALIGNED
-            return defender_stop();
+            return defender_stop()
         else:
             return adjust_angle(self.our_defender.get_rotation_to_point(self.their_goal.x, self.their_goal.y))
             
@@ -73,19 +73,25 @@ class DefenderDefend(Strategy):
         """
         Align yourself to the middle of the goal.
         """
+	print 'Robot y: %d, Goal centre: %d' % (self.our_defender.y, self.our_goal.y)
+
 	if not is_aligned(self.our_defender.y, self.our_goal.y):
             return adjust_y_position(self.our_defender, self.our_goal.y)
-	elif not is_aligned(self.our_defender.x, self.goal_front_x):
-	    return adjust_x_position(self.our_defender, self.goal_front_x)
+	elif not is_facing_target(self.our_defender.get_rotation_to_point(self.their_goal.x, self.their_goal.y)):
+	    self.current_state = self.ANG_UNALIGNED
+	    return defender_stop()
         else:
 	    self.current_state = self.DEFEND_GOAL
-            return defender_stop();
+            return defender_stop()
         
 
     def defend_goal(self):
         """
         Block the shot.
         """
+	
+	return defender_stop()
+      
 	if not is_aligned(self.our_defender.y, self.ball.y):
 	    return adjust_y_position(self.our_defender, self.ball.y)
 	else:

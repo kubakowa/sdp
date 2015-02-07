@@ -2,8 +2,8 @@
 from math import tan, pi, hypot, log
 from planning.models import Robot
 
-DISTANCE_MATCH_THRESHOLD = 15
-ANGLE_MATCH_THRESHOLD = 0.3
+DISTANCE_MATCH_THRESHOLD = 10
+ANGLE_MATCH_THRESHOLD = pi/12
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
@@ -134,7 +134,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
 
         elif abs(angle) > angle_thresh:
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
-            print 'angle to ball: ', angle
+            # print 'angle to ball: ', angle
             if abs(angle)<0.8:
                 bb_speed=0
             else:
@@ -234,10 +234,10 @@ def adjust_y_position(robot, target_y):
     disp = target_y - robot.y
     if disp < 0:
         # move left
-	return {'left_motor': 60, 'right_motor': -60, 'back_motor': 90, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+	return {'left_motor': 50, 'right_motor': -50, 'back_motor': 90, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
     else:
        # move right
-       return {'left_motor': -60, 'right_motor': 60, 'back_motor': -90, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+       return {'left_motor': -50, 'right_motor': 50, 'back_motor': -90, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
 
 def adjust_x_position(robot, target_x):
     disp = target_x - robot.x
@@ -250,6 +250,7 @@ def adjust_x_position(robot, target_x):
        return {'left_motor': -100, 'right_motor': -100, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
 
 def is_aligned(robot_coor, target):
+    print 'target %d coor %d abs %d' % (target, robot_coor, abs(target-robot_coor))
     return abs(target - robot_coor) < DISTANCE_MATCH_THRESHOLD    
 
 def is_facing_target(ang):
