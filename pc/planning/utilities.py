@@ -2,8 +2,8 @@
 from math import tan, pi, hypot, log
 from planning.models import Robot
 
-DISTANCE_MATCH_THRESHOLD = 10
-ANGLE_MATCH_THRESHOLD = pi/12
+DISTANCE_MATCH_THRESHOLD = 60
+ANGLE_MATCH_THRESHOLD = pi/15
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
@@ -230,17 +230,26 @@ def adjust_angle(ang):
     else:
         return {'left_motor': speed, 'right_motor': -speed, 'back_motor': -speed, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 1}
 
-def adjust_y_position(robot, target_y):
+def adjust_y_position(robot, target_y, side):
     disp = target_y - robot.y
+    
+    if side == 'right':
+      disp = -disp
+
+
     if disp < 0:
         # move left
-	return {'left_motor': 50, 'right_motor': -50, 'back_motor': 90, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+	return {'left_motor': 60, 'right_motor': -60, 'back_motor': 100, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
     else:
        # move right
-       return {'left_motor': -50, 'right_motor': 50, 'back_motor': -90, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+       return {'left_motor': -60, 'right_motor': 60, 'back_motor': -100, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
 
-def adjust_x_position(robot, target_x):
+def adjust_x_position(robot, target_x, side):
     disp = target_x - robot.x
+
+    if side == 'right':
+      disp = -disp
+
     print 'Target: %d, Robot: %d' % (target_x, robot.x)
     if disp > 0:
         # move forward

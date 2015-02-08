@@ -76,11 +76,13 @@ class DefenderDefend(Strategy):
 	print 'Robot y: %d, Goal centre: %d' % (self.our_defender.y, self.our_goal.y)
 
 	if not is_aligned(self.our_defender.y, self.our_goal.y):
-            return adjust_y_position(self.our_defender, self.our_goal.y)
+            return adjust_y_position(self.our_defender, self.our_goal.y, self.world._our_side)
 	elif not is_facing_target(self.our_defender.get_rotation_to_point(self.their_goal.x, self.their_goal.y)):
 	    self.current_state = self.ANG_UNALIGNED
+	    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Robot not alligned'
 	    return defender_stop()
         else:
+	    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Robot alligned'
 	    self.current_state = self.DEFEND_GOAL
             return defender_stop()
         
@@ -93,7 +95,7 @@ class DefenderDefend(Strategy):
 	return defender_stop()
       
 	if not is_aligned(self.our_defender.y, self.ball.y):
-	    return adjust_y_position(self.our_defender, self.ball.y)
+	    return adjust_y_position(self.our_defender, self.ball.y, self.world._our_side)
 	else:
 	   return defender_stop();
 	
