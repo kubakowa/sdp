@@ -29,6 +29,7 @@ void setupCommands() {
   comm.addCommand("BB_OPEN", open_grabber);
   comm.addCommand("BB_CLOSE", close_grabber);
   comm.addCommand("BB_STOP", make_stop);
+  comm.addCommand("BB_PAUSE", make_pause);
 } 
 
 void setup(){
@@ -97,6 +98,15 @@ void close_grabber() {
   motorForward(KICK_MOTOR, MAX_SPEED);
   delay(CLOSE_TIME);
   motorStop(KICK_MOTOR);
+}
+
+void make_pause() {
+  motorStop(BACK_MOTOR);
+  motorStop(LEFT_MOTOR); 
+  motorStop(RIGHT_MOTOR);
+  LEFT_SPEED = 0;
+  RIGHT_SPEED = 0;
+  BACK_SPEED = 0;
 }
 
 void make_stop() {
