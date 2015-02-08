@@ -30,6 +30,7 @@ void setupCommands() {
   comm.addCommand("BB_CLOSE", close_grabber);
   comm.addCommand("BB_STOP", make_stop);
   comm.addCommand("BB_PAUSE", make_pause);
+  comm.addCommand("BB_STEP", make_incremental_move);
 } 
 
 void setup(){
@@ -59,6 +60,29 @@ void burst_move(int left_speed,int right_speed, int back_speed) {
   BACK_SPEED = back_speed;
 }
  
+void make_incremental_move() {
+  char *left_m;
+  char *right_m;
+  char *back_m;
+  
+  int left_speed;
+  int right_speed;
+  int back_speed;
+  
+  left_m = comm.next();
+  right_m = comm.next();
+  back_m = comm.next();
+  
+  if (left_m != NULL && right_m != NULL && back_m != NULL) {
+    left_speed = atoi(left_m);
+    right_speed = atoi(right_m);
+    back_speed = atoi(back_m);
+  }
+  
+  burst_move(left_speed, right_speed, back_speed);
+  delay(250);
+  make_pause();
+}
 
 void make_move() {
   char *left_m;
