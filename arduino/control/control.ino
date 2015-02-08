@@ -80,7 +80,7 @@ void make_incremental_move() {
   }
   
   burst_move(left_speed, right_speed, back_speed);
-  delay(250);
+  delay(220);
   make_pause();
 }
 
@@ -131,6 +131,7 @@ void make_pause() {
   LEFT_SPEED = 0;
   RIGHT_SPEED = 0;
   BACK_SPEED = 0;
+  delay(200);
 }
 
 void make_stop() {

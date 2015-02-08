@@ -227,6 +227,8 @@ class Attacker_Controller(Robot_Controller):
         elif  action['kicker'] == 2:
             try:
                 comm.write('BB_OPEN\n')
+                time.sleep(0.5) # because magic. booyah.
+                comm.write('BB_OPEN\n')
             except StandardError:
                 pass
             
