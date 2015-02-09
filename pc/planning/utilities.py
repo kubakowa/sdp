@@ -2,13 +2,14 @@
 from math import tan, pi, hypot, log
 from planning.models import Robot
 
-DISTANCE_MATCH_THRESHOLD = 35
+
+DISTANCE_MATCH_THRESHOLD = 30
+DISTANCE_ALMOST_THERSHOLD = 60
 ANGLE_MATCH_THRESHOLD = pi/15
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
 BALL_VELOCITY = 3
-
 
 def is_shot_blocked(world, our_robot, their_robot):
     '''
@@ -268,6 +269,9 @@ def adjust_x_position(robot, target_x, side):
 def is_aligned(robot_coor, target):
     print 'Align target %d, current position %d' % (target, robot_coor)
     return abs(target - robot_coor) < DISTANCE_MATCH_THRESHOLD    
+
+def is_aligned_almost(robot_coor, target):
+    return abs(target - robot_coor) < DISTANCE_ALMOST_THERSHOLD
 
 def is_facing_target(ang):
     return abs(ang) < ANGLE_MATCH_THRESHOLD
