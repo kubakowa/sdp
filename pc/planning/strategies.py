@@ -64,7 +64,7 @@ class DefenderPenalty(Strategy):
 	    print 'Ball is moving, try to block it!'
             predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=False)
 
-            if (is_aligned(predicted_y, self.our_defender.y):
+            if (is_aligned(predicted_y, self.our_defender.y)):
 		print 'Robot in position, waiting for the ball'
                 return defender_stop();
 	    else:
