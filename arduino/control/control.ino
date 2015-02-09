@@ -8,17 +8,15 @@
 #define BACK_MOTOR 2
 #define KICK_MOTOR 3
 
+/* State */
+int GRABBER_OPEN = 0;
+
 /* Constants */
-int KICK_TIME = 300;
+int KICK_TIME = 400;
 int GRAB_TIME = 200;
-int CLOSE_TIME = 150;
+int CLOSE_TIME = 250;
 int MAX_SPEED = 100;
-int GRAB_SPEED = 10;
-
-int LEFT_SPEED = 0;
-int RIGHT_SPEED = 0;
-int BACK_SPEED = 0;
-
+int OPEN_SPEED = 30;
 
 // command
 SerialCommand comm;
@@ -36,10 +34,15 @@ void setupCommands() {
 void setup(){
   SDPsetup();
   setupCommands();
-  //Serial.println("SETUP COMPLETE");
 }
 
 void burst_move(int left_speed,int right_speed, int back_speed) {
+  
+  boolean forward = left_speed == right_speed;
+  
+  if (forward)
+    motorStop(BACK_MOTOR);
+    
   if (left_speed > 0)
     motorForward(LEFT_MOTOR, left_speed);
   else if (left_speed < 0)
@@ -49,15 +52,14 @@ void burst_move(int left_speed,int right_speed, int back_speed) {
     motorForward(RIGHT_MOTOR, right_speed);
   else if (right_speed < 0)
     motorBackward(RIGHT_MOTOR, -right_speed);
+  
+  if (forward)
+    return;
       
   if (back_speed > 0)
     motorForward(BACK_MOTOR, back_speed);
   else if (back_speed < 0)  
     motorBackward(BACK_MOTOR, -back_speed); 
-    
-  LEFT_SPEED = left_speed;
-  RIGHT_SPEED = right_speed;
-  BACK_SPEED = back_speed;
 }
  
 void make_incremental_move() {
@@ -107,43 +109,53 @@ void make_move() {
 }
 
 void make_kick() {
+  
+  if (GRABBER_OPEN)
+    return;
+  
   motorBackward(KICK_MOTOR, MAX_SPEED);
   delay(KICK_TIME);
   motorStop(KICK_MOTOR);
 }
 
 void open_grabber() {
+  
+  if (GRABBER_OPEN)
+    return;
+  
   motorBackward(KICK_MOTOR, MAX_SPEED);
   delay(GRAB_TIME);
-  motorBackward(KICK_MOTOR, GRAB_SPEED);
+  motorBackward(KICK_MOTOR, OPEN_SPEED);
+  
+  /* Assign state of the grabber */
+  GRABBER_OPEN = 1;
 }
 
 void close_grabber() {
+  
+  if (!GRABBER_OPEN)
+    return;
+  
   motorStop(KICK_MOTOR);
   motorForward(KICK_MOTOR, MAX_SPEED);
   delay(CLOSE_TIME);
   motorStop(KICK_MOTOR);
+  
+  /* Assign state of the grabber */
+  GRABBER_OPEN = 0;
 }
 
 void make_pause() {
   motorStop(BACK_MOTOR);
   motorStop(LEFT_MOTOR); 
   motorStop(RIGHT_MOTOR);
-  LEFT_SPEED = 0;
-  RIGHT_SPEED = 0;
-  BACK_SPEED = 0;
   delay(210);
 }
 
 void make_stop() {
-    
   motorStop(BACK_MOTOR);
   motorStop(LEFT_MOTOR); 
   motorStop(RIGHT_MOTOR);
-  
-  LEFT_SPEED = 0;
-  RIGHT_SPEED = 0;
-  BACK_SPEED = 0;
 }
 
 void invalid_command(const char* command) { }

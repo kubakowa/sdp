@@ -2,7 +2,6 @@
 from math import tan, pi, hypot, log
 from planning.models import Robot
 
-
 DISTANCE_MATCH_THRESHOLD = 30
 DISTANCE_ALMOST_THERSHOLD = 60
 ANGLE_MATCH_THRESHOLD = pi/15
