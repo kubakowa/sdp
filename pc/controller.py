@@ -205,10 +205,13 @@ class Attacker_Controller(Robot_Controller):
         print action
         left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
-        command = 'BB_MOVE %d %d %d 0\n' % (left_motor, right_motor, right_motor)
+	back_motor = 0
+	if left_motor==-right_motor:
+            back_motor=right_motor
+        command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
        
         if (int (action['speed'])==0):
-            command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, right_motor)
+            command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
         print(command)
         comm.write(command)
 

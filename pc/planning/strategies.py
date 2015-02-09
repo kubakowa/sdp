@@ -470,15 +470,22 @@ class AttackerGrab(Strategy):
             self.current_state = self.GRAB_BALL
             return do_nothing()
         else:
-            return calculate_motor_speed(displacement, angle, careful=True)
+            return calculate_motor_speed(displacement, angle)
 
     def grab(self):
         if self.our_attacker.has_ball(self.ball):
             self.current_state = self.GRABBED
             return do_nothing()
         else:
-            self.our_attacker.catcher = 'closed'
-            return grab_ball()
+            if self.our_attacker.can_catch_ball(self.ball):
+                self.our_attacker.catcher = 'closed'
+                return grab_ball()
+            else:
+                if self.our_attacker.catcher == 'closed':
+                    self.current_state = self.PREPARE
+                else:
+                     self.current_state = self.GO_TO_BALL
+                return do_nothing()
 
 
 class DefenderGrab(Strategy):
