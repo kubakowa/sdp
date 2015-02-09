@@ -73,8 +73,8 @@ class DefenderPenalty(Strategy):
 	   
 class DefenderDefend(Strategy):
 
-    ANG_UNALIGNED, POS_UNALIGNED, DEFEND_GOAL = 'ANG_UNALIGNED', 'POS_UNALIGNED', 'DEFEND_GOAL'
-    STATES = [ANG_UNALIGNED, POS_UNALIGNED, DEFEND_GOAL]
+    ANG_UNALIGNED, POS_UNALIGNED, DEFEND_GOAL, POS_UNALMOST = 'ANG_UNALIGNED', 'POS_UNALIGNED', 'DEFEND_GOAL', 'POS_UNALMOST'
+    STATES = [ANG_UNALIGNED, POS_UNALIGNED, DEFEND_GOAL,POS_ALMOST]
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
 
@@ -86,6 +86,7 @@ class DefenderDefend(Strategy):
         self.NEXT_ACTION_MAP = {
             self.ANG_UNALIGNED: self.ang_align,
 	    self.POS_UNALIGNED: self.pos_align,
+            self.POS_UNALMOST: self.pos_almost,
             self.DEFEND_GOAL: self.defend_goal
         }
 
@@ -96,6 +97,16 @@ class DefenderDefend(Strategy):
         self.our_defender = self.world.our_defender
         self.ball = self.world.ball
         self.their_goal = self.world.their_goal
+    
+    def pos_almost(self):
+        if not is_aligned_almost(self.our_defender.y, self.our_goal.y):
+            return adjust_y_position(self.our_defender, self.our_goal.y, self.world._our_side)
+        elif not is_facing_target(self.our_defender.get_rotation_to_point(self.their_goal.x, self.their_goal.y)):
+            self.current_sate = self.ANG_UNALIGNED
+            return defender_stop()
+        else:
+            self.current_state = self.POS_UNALIGNED
+            return defender_stop()
 
     def ang_align(self):
         """
@@ -149,6 +160,13 @@ class DefenderDefend(Strategy):
             return self.world.our_goal.x + self.GOAL_ALIGN_OFFSET
         else:
             return self.world.our_goal.x - self.GOAL_ALIGN_OFFSET
+
+    def get_almost_alignment(self, side):
+        assert side in self.SIDES
+        if side == self.LEFT:
+            return self.world.our_goal.x + self.GOAL_ALMOST_OFFSET
+        else:
+            return self.world.our_goal.x - self.GOAL_ALMOST_OFFSET
 
 
 class AttackerDefend(Strategy):
