@@ -2,7 +2,7 @@
 from math import tan, pi, hypot, log
 from planning.models import Robot
 
-DISTANCE_MATCH_THRESHOLD = 50
+DISTANCE_MATCH_THRESHOLD = 35
 ANGLE_MATCH_THRESHOLD = pi/15
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
@@ -135,7 +135,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         elif abs(angle) > angle_thresh:
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
             print ('angle to ball: ', angle)
-            if abs(angle)<0.8:
+            if abs(angle)<1:
                 print 'angle close to needed'
                 bb_speed=0
             else:
@@ -143,11 +143,11 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 bb_speed=1
             #BB
             if angle<0:
-                speed1=70
-                speed2=-70
+                speed1=60
+                speed2=-60
             else:
-                speed1=-70
-                speed2=70
+                speed1=-60
+                speed2=60
 
 	    returnDict= {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
 
@@ -162,7 +162,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
            # if careful:
            #     return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-85)))}
            # return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-30)))}
-	return  {'left_motor': 70, 'right_motor': 70, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
+	return  {'left_motor': 60, 'right_motor': 60, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
     else:
         print 'robot is at the ball'
         if abs(angle) > angle_thresh:
@@ -174,11 +174,11 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 bb_speed=1
             #BB
             if angle<0:
-                speed1=70;
-                speed2=-70;
+                speed1=60;
+                speed2=-60;
             else:
-                speed1=-70;
-                speed2=70;
+                speed1=-60;
+                speed2=60;
             return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': 0}
 
         else:
