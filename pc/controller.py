@@ -104,7 +104,7 @@ class Controller:
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
                 #if self.defender is not None:
-                 #  self.defender.execute(self.arduino, defender_actions)
+                  # self.defender.execute(self.arduino, defender_actions)
 
                 # Information about the grabbers from the world
                 grabbers = {
@@ -175,16 +175,52 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
+        print action
 	left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
-        back_motor = int(action['back_motor'])
-        stop = int(action['stop'])
-        
-        if stop == 1:
-          comm.write('BB_STOP\n')
-	else:
-	  command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
-	  comm.write(command)
+        back_motor = 0
+	if left_motor==-right_motor:
+            back_motor=right_motor
+        try:
+            back_motor = int(action['back_motor'])
+        except KeyError:
+            back_motor=0
+        if 'stop' in action and int(action['stop']) == 1:
+            command='BB_STOP\n'
+        elif 'speed' in action and (int (action['speed'])==0):
+            command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
+        elif  action['kicker'] == 2:
+            try:
+                comm.write('BB_OPEN\n')
+                time.sleep(0.8) # because magic. booyah.
+                comm.write('BB_OPEN\n')
+                time.sleep(0.8) # because magic. booyah.
+                comm.write('BB_OPEN\n')
+            except StandardError:
+                pass
+        elif  action['kicker'] == 2:
+            try:
+                comm.write('BB_OPEN\n')
+                time.sleep(0.8) # because magic. booyah.
+                comm.write('BB_OPEN\n')
+                time.sleep(0.8) # because magic. booyah.
+                comm.write('BB_OPEN\n')
+            except StandardError:
+                pass
+        elif action['catcher'] != 0:
+            try:
+                comm.write('BB_CLOSE\n')
+                time.sleep(0.5)
+                comm.write('BB_CLOSE\n')
+            except StandardError:
+                pass
+        else:
+            command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
+
+        badCom='BB_MOVE 0 0 0\n'
+        print 'defender command:' + command
+        if command != badCom:
+            comm.write(command)
 
 
 class Attacker_Controller(Robot_Controller):
@@ -214,8 +250,6 @@ class Attacker_Controller(Robot_Controller):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
         print(command)
         comm.write(command)
-
-        
 
         if action['kicker'] == 1:
             try:

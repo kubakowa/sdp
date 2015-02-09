@@ -9,7 +9,7 @@ ANGLE_MATCH_THRESHOLD = pi/15
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
-BALL_VELOCITY = 3
+BALL_VELOCITY = 5
 
 def is_shot_blocked(world, our_robot, their_robot):
     '''
@@ -134,7 +134,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         if displacement>distThreshFast:
             angle_thresh=angle_thresh
 
-        elif abs(angle) > angle_thresh:
+        if abs(angle) > angle_thresh:
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
             angleThreshIncr=1.2
 
@@ -154,10 +154,8 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 speed1=-55
                 speed2=55
 
-	    returnDict= {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
-
-            return returnDict
-
+	    return {'left_motor': speed1, 'right_motor': speed2, 'back_motor':speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
+       
         else:
             print('moving to ball')
             bb_speed = 1
@@ -165,8 +163,8 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 bb_speed=0
                 print 'Carefully. DISP:', displacement
                 return {'left_motor': 70, 'right_motor': 70, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
-        #move forward
-	return  {'left_motor': 70, 'right_motor': 70, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
+            #move forward
+	    return  {'left_motor': 70, 'right_motor': 70, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
     else:
         print 'robot is at the ball'
         if abs(angle) > angle_thresh:
@@ -183,7 +181,8 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
             else:
                 speed1=-60;
                 speed2=60;
-            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': 0}
+            #turning when robot is at the ball
+            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': speed2}
 
         else:
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed, 'back_motor': 0}

@@ -56,7 +56,7 @@ class DefenderPenalty(Strategy):
         # Predict where they are aiming.
 	if self.ball.velocity <= BALL_VELOCITY: 
             predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=False)
-	    print 'Ball is not moving, predicted y is %d, robot is at %d' % (predicted_y, self.our_defender.y)
+	    print 'Ball is not moving (velocity %d), predicted y is %d, robot is at %d' % (self.ball.velocity, predicted_y, self.our_defender.y)
             return do_nothing()
 
 	# Predict where the ball is moving and try to block it.
@@ -74,7 +74,7 @@ class DefenderPenalty(Strategy):
 class DefenderDefend(Strategy):
 
     ANG_UNALIGNED, POS_UNALIGNED, DEFEND_GOAL, POS_UNALMOST = 'ANG_UNALIGNED', 'POS_UNALIGNED', 'DEFEND_GOAL', 'POS_UNALMOST'
-    STATES = [ANG_UNALIGNED, POS_UNALIGNED, DEFEND_GOAL,POS_ALMOST]
+    STATES = [ANG_UNALIGNED, POS_UNALIGNED, DEFEND_GOAL,POS_UNALMOST]
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
 
@@ -479,7 +479,6 @@ class AttackerGrab(Strategy):
             self.our_attacker.catcher = 'open'
             return open_catcher()
         else:
-        
             return do_nothing()
 
     def position(self):
