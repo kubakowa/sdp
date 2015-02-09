@@ -182,7 +182,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 speed1=-60;
                 speed2=60;
             #turning when robot is at the ball
-            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': speed2}
+            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': speed2, 'bb_turn':1}
 
         else:
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed, 'back_motor': 0}

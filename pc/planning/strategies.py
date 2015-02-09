@@ -498,10 +498,7 @@ class AttackerGrab(Strategy):
                 self.our_attacker.catcher = 'closed'
                 return grab_ball()
             else:
-                if self.our_attacker.catcher == 'closed':
-                    self.current_state = self.PREPARE
-                else:
-                     self.current_state = self.GO_TO_BALL
+            	self.current_state = self.PREPARE
                 return do_nothing()
 
 

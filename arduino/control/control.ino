@@ -119,6 +119,7 @@ void open_grabber() {
 }
 
 void close_grabber() {
+  motorStop(KICK_MOTOR);
   motorForward(KICK_MOTOR, MAX_SPEED);
   delay(CLOSE_TIME);
   motorStop(KICK_MOTOR);
@@ -131,32 +132,10 @@ void make_pause() {
   LEFT_SPEED = 0;
   RIGHT_SPEED = 0;
   BACK_SPEED = 0;
-  delay(200);
+  delay(210);
 }
 
 void make_stop() {
-  motorStop(BACK_MOTOR);
-  motorStop(LEFT_MOTOR); 
-  motorStop(RIGHT_MOTOR);
-  
-  if (abs(LEFT_SPEED) == abs(RIGHT_SPEED) && abs(BACK_SPEED) == abs(LEFT_SPEED)) {
-    if (LEFT_SPEED < 0)
-      motorForward(LEFT_MOTOR, -LEFT_SPEED);
-    else
-      motorBackward(LEFT_MOTOR, LEFT_SPEED);
-      
-    if (RIGHT_SPEED < 0)
-      motorForward(RIGHT_MOTOR, -RIGHT_SPEED);
-    else
-      motorBackward(RIGHT_MOTOR, RIGHT_SPEED);
-        
-    if (BACK_SPEED < 0)
-      motorForward(BACK_MOTOR, -BACK_SPEED);
-    else
-      motorBackward(BACK_MOTOR, BACK_SPEED); 
-  }
-  
-  delay(500);
     
   motorStop(BACK_MOTOR);
   motorStop(LEFT_MOTOR); 

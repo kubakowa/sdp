@@ -198,15 +198,6 @@ class Defender_Controller(Robot_Controller):
                 comm.write('BB_OPEN\n')
             except StandardError:
                 pass
-        elif  action['kicker'] == 2:
-            try:
-                comm.write('BB_OPEN\n')
-                time.sleep(0.8) # because magic. booyah.
-                comm.write('BB_OPEN\n')
-                time.sleep(0.8) # because magic. booyah.
-                comm.write('BB_OPEN\n')
-            except StandardError:
-                pass
         elif action['catcher'] != 0:
             try:
                 comm.write('BB_CLOSE\n')
@@ -227,7 +218,7 @@ class Attacker_Controller(Robot_Controller):
     """
     Attacker implementation.
     """
-
+    wasTurning=0
     def __init__(self):
         """
         Do the same setup as the Robot class, as well as anything specific to the Attacker.
@@ -249,7 +240,14 @@ class Attacker_Controller(Robot_Controller):
         if (int (action['speed'])==0):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
         print(command)
+        if self.wasTurning==1 and 'bb_turn' not in action:
+            print 'stopping back motor'
+            comm.write('BB_STOP\n')
         comm.write(command)
+        if 'bb_turn' in action:
+            self.wasTurning=1
+        else:
+            self.wasTurning=0
 
         if action['kicker'] == 1:
             try:
