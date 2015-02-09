@@ -31,6 +31,46 @@ class Strategy(object):
     def generate(self):
         return self.NEXT_ACTION_MAP[self.current_state]()
 
+class DefenderPenalty(Strategy):
+
+    DEFEND_GOAL = 'DEFEND_GOAL'
+    STATES = [DEFEND_GOAL]
+    LEFT, RIGHT = 'left', 'right'
+    SIDES = [LEFT, RIGHT]
+
+    def __init__(self, world):
+        super(DefenderPenalty, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+            self.DEFEND_GOAL: self.defend_goal
+        }
+
+        self.their_attacker = self.world.their_attacker
+        self.our_defender = self.world.our_defender
+        self.ball = self.world.ball
+
+    def defend_goal(self):
+        """
+        Wait until the ball is fired, then try to block it.
+        """
+        # Predict where they are aiming.
+	if self.ball.velocity <= BALL_VELOCITY: 
+            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=False)
+	    print 'Ball is not moving, predicted y is %d, robot is at %d' % (predicted_y, self.our_defender.y)
+            return do_nothing()
+
+	# Predict where the ball is moving and try to block it.
+        elif self.ball.velocity > BALL_VELOCITY:
+	    print 'Ball is moving, try to block it!'
+            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=False)
+
+            if (is_aligned(predicted_y, self.our_defender.y):
+		print 'Robot in position, waiting for the ball'
+                return defender_stop();
+	    else:
+		print 'Robot not in position yet, moving towards'
+            	return adjust_y_position(self.our_defender, predicted_y, self.world._our_side)
+	   
 class DefenderDefend(Strategy):
 
     ANG_UNALIGNED, POS_UNALIGNED, DEFEND_GOAL = 'ANG_UNALIGNED', 'POS_UNALIGNED', 'DEFEND_GOAL'
@@ -79,10 +119,10 @@ class DefenderDefend(Strategy):
             return adjust_y_position(self.our_defender, self.our_goal.y, self.world._our_side)
 	elif not is_facing_target(self.our_defender.get_rotation_to_point(self.their_goal.x, self.their_goal.y)):
 	    self.current_state = self.ANG_UNALIGNED
-	    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Robot not alligned'
+	    print 'Robot not aligned'
 	    return defender_stop()
         else:
-	    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Robot alligned'
+	    print 'Robot aligned'
 	    self.current_state = self.DEFEND_GOAL
             return defender_stop()
         

@@ -20,7 +20,7 @@ class Planner:
                                      'score' : [AttackerDriveByTurn, AttackerDriveBy, AttackerTurnScore, AttackerScoreDynamic],
                                      'catch' : [AttackerPositionCatch, AttackerCatch]}
 
-        self._defender_strategies = {'defence' : [DefenderDefend],
+        self._defender_strategies = {'defence' : [DefenderPenalty],
                                      'grab' : [DefenderGrab],
                                      'pass' : [DefenderBouncePass]}
 
@@ -97,6 +97,7 @@ class Planner:
 	    
 	    # Otherwise, we need to defend:
             else:
+		print 'Ball not in our defending zone, DEFENDING!'
                 # If the bal is not in the defender's zone, the state should always be 'defend'.
                 if not self._defender_state == 'defence':
                     self._defender_state = 'defence'

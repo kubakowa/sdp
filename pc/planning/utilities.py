@@ -83,7 +83,7 @@ def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce
                 return bottom_y
             return predicted_y
         else:
-            return None
+            return world.our_goal.y
 
 
 def grab_ball():
@@ -150,7 +150,6 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 speed2=70
 
 	    returnDict= {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
-
 
             return returnDict
 
@@ -235,18 +234,19 @@ def adjust_angle(ang):
         return {'left_motor': speed, 'right_motor': -speed, 'back_motor': -speed, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 1}
 
 def adjust_y_position(robot, target_y, side):
+    print 'Adjusting y position, current position is %d, target is %d' % (robot.y, target_y)
     disp = target_y - robot.y
-    
     if side == 'right':
       disp = -disp
 
-
     if disp < 0:
         # move left
-	return {'left_motor': 60, 'right_motor': -60, 'back_motor': 100, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+        print 'Moving left!'
+	return {'left_motor': 50, 'right_motor': -50, 'back_motor': 80, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
     else:
        # move right
-       return {'left_motor': -60, 'right_motor': 60, 'back_motor': -100, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+       print 'Moving right!'
+       return {'left_motor': -50, 'right_motor': 50, 'back_motor': -80, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
 
 def adjust_x_position(robot, target_x, side):
     disp = target_x - robot.x
@@ -263,7 +263,7 @@ def adjust_x_position(robot, target_x, side):
        return {'left_motor': -100, 'right_motor': -100, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
 
 def is_aligned(robot_coor, target):
-    print 'target %d coor %d abs %d' % (target, robot_coor, abs(target-robot_coor))
+    print 'Align target %d, current position %d' % (target, robot_coor)
     return abs(target - robot_coor) < DISTANCE_MATCH_THRESHOLD    
 
 def is_facing_target(ang):
