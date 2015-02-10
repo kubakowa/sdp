@@ -397,7 +397,7 @@ class DefenderPass(Strategy):
         Kick.
         """
         self.current_state = self.FINISHED
-        self.our_defender.catcher = 'open'
+        self.our_defender.catcher = 'closed'
         return kick_ball()
 
     def _get_shooting_coordinates(self, robot):
