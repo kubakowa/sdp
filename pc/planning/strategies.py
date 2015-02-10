@@ -332,7 +332,7 @@ class AttackerPositionCatch(Strategy):
         return do_nothing()
 
 
-class DefenderBouncePass(Strategy):
+class DefenderPass(Strategy):
     '''
     Once the defender grabs the ball, move to the center of the zone and shoot towards
     the wall of the center of the opposite attacker zone, in order to reach our_attacker
@@ -345,7 +345,7 @@ class DefenderBouncePass(Strategy):
     UP, DOWN = 'UP', 'DOWN'
 
     def __init__(self, world):
-        super(DefenderBouncePass, self).__init__(world, self.STATES)
+        super(DefenderPass, self).__init__(world, self.STATES)
 
         # Map states into functions
         self.NEXT_ACTION_MAP = {
