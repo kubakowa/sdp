@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from math import tan, pi, hypot, log
 from planning.models import Robot
+import time
 
 DISTANCE_MATCH_THRESHOLD = 30
 DISTANCE_ALMOST_THERSHOLD = 60
@@ -137,7 +138,6 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
             angleThreshIncr=1.5
 
-                
             print ('angle to ball: ', angle)
             if abs(angle)<angleIncrThresh:
                 print 'angle close to needed'
@@ -191,39 +191,57 @@ def calculate_motor_speed_turn(displacement, angle, backwards_ok=False, careful=
     Simplistic view of calculating the speed: no modes or trying to be careful
     '''
     moving_backwards = False
-    general_speed = 95 if careful else 300
-    angle_thresh = BALL_ANGLE_THRESHOLD if careful else ANGLE_MATCH_THRESHOLD
-
-    if backwards_ok and abs(angle) > pi/2:
-        angle = (-pi + angle) if angle > 0 else (pi + angle)
-        moving_backwards = True
+    general_speed = 95 if careful else 45
+    angle_thresh = ANGLE_MATCH_THRESHOLD
+    angleIncrThresh=0.9
 
     if not (displacement is None):
-
-        if displacement < DISTANCE_MATCH_THRESHOLD:
-            return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
-
-        elif abs(angle) > angle_thresh:
-            speed = (angle/pi) * MAX_ANGLE_SPEED
-            return {'left_motor': -speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
-
-        else:
-            speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
-            speed = -speed if moving_backwards else speed
-            # print 'DISP:', displacement
-            if careful:
-                return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-85)))}
-            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-30)))}
+      return do_nothing()
 
     else:
 
-        if abs(angle) > angle_thresh:
-            speed = (angle/pi) * MAX_ANGLE_SPEED
-            return {'left_motor': -speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+	if abs(angle) > angle_thresh:
+            #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
+            angleThreshIncr=1.5
 
-        else:
-            return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            print ('angle to ball: ', angle)
+            if abs(angle)<angleIncrThresh:
+                print 'angle close to needed'
+                bb_speed=0
+            else:
+                print 'angle still too big for stepping'
+                bb_speed=1
+            #BB
+            if angle<0:
+                speed1=45
+                speed2=-45
+            else:
+                speed1=-45
+                speed2=45
 
+	    return {'left_motor': speed1, 'right_motor': speed2, 'back_motor':speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
+       
+	else:
+
+            print 'turning to ball while next to it'
+            print('angle to ball', angle)
+
+            if abs(angle)<angleIncrThresh:
+                bb_speed=0
+            else:
+                bb_speed=1
+            #BB
+            if angle<0:
+                speed1=60;
+                speed2=-60;
+            else:
+                speed1=-60;
+                speed2=60;
+            #turning when robot is at the ball
+            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': speed2, 'bb_turn':1}
+    
+    print 'Should not reach this code'  
+    return do_nothing()
 
 def do_nothing():
     return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}

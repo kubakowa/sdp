@@ -18,7 +18,7 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyACM0', comms=1):
+    def __init__(self, pitch, color, our_side, video_port=1, comm_port='/dev/ttyACM1', comms=1):
         """
         Entry point for the SDP system.
 
@@ -101,10 +101,10 @@ class Controller:
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
 
-                if self.attacker is not None:
-                    self.attacker.execute(self.arduino, attacker_actions)
-                #if self.defender is not None:
-                  # self.defender.execute(self.arduino, defender_actions)
+                #if self.attacker is not None:
+                #    self.attacker.execute(self.arduino, attacker_actions)
+                if self.defender is not None:
+                   self.defender.execute(self.arduino, defender_actions)
 
                 # Information about the grabbers from the world
                 grabbers = {
@@ -164,7 +164,7 @@ class Defender_Controller(Robot_Controller):
     """
     Defender implementation.
     """
-
+    wasTurning=0
     def __init__(self):
         """
         Do the same setup as the Robot class, as well as anything specific to the Defender.
@@ -175,20 +175,45 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        print action
-	left_motor = int(action['left_motor'])
+	print action
+
+        left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
-        back_motor = 0
+	back_motor = 0
+	
 	if left_motor==-right_motor:
-            back_motor=right_motor
-        try:
-            back_motor = int(action['back_motor'])
-        except KeyError:
-            back_motor=0
-        if 'stop' in action and int(action['stop']) == 1:
-            command='BB_STOP\n'
-        elif 'speed' in action and (int (action['speed'])==0):
+	  # turning
+	  if 'bb_turn' in action:
+	    back_motor=right_motor
+	  # going sideways
+	  else:
+	    back_motor=-1.5*right_motor
+	
+        command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
+       
+        if (int (action['speed'])==0):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
+        print command
+       
+	if self.wasTurning==1 and 'bb_turn' not in action:
+            print 'stopping back motor'
+            comm.write('BB_STOP\n')
+        
+	comm.write(command)
+       
+	if 'bb_turn' in action:
+            self.wasTurning=1
+        else:
+            self.wasTurning=0
+
+        if action['kicker'] == 1:
+            try:
+                comm.write('BB_KICK\n')
+                time.sleep(0.5) # because magic. booyah.
+                comm.write('BB_KICK\n')
+
+            except StandardError:
+                pass
         elif  action['kicker'] == 2:
             try:
                 comm.write('BB_OPEN\n')
@@ -198,20 +223,18 @@ class Defender_Controller(Robot_Controller):
                 comm.write('BB_OPEN\n')
             except StandardError:
                 pass
+            
         elif action['catcher'] != 0:
             try:
                 comm.write('BB_CLOSE\n')
                 time.sleep(0.5)
                 comm.write('BB_CLOSE\n')
+		print ('SENDING GRAB COMMAND')
             except StandardError:
                 pass
-        else:
-            command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
 
-        badCom='BB_MOVE 0 0 0\n'
-        print 'defender command:' + command
-        if command != badCom:
-            comm.write(command)
+    def shutdown(self, comm):
+        comm.write('BB_STOP\n')
 
 
 class Attacker_Controller(Robot_Controller):
@@ -239,12 +262,16 @@ class Attacker_Controller(Robot_Controller):
        
         if (int (action['speed'])==0):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
-        print(command)
-        if self.wasTurning==1 and 'bb_turn' not in action:
+        
+	print command
+        
+	if self.wasTurning==1 and 'bb_turn' not in action:
             print 'stopping back motor'
             comm.write('BB_STOP\n')
-        comm.write(command)
-        if 'bb_turn' in action:
+        
+	comm.write(command)
+        
+	if 'bb_turn' in action:
             self.wasTurning=1
         else:
             self.wasTurning=0

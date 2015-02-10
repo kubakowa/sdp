@@ -132,10 +132,6 @@ void open_grabber() {
 }
 
 void close_grabber() {
-  
-  if (!GRABBER_OPEN)
-    return;
-  
   motorStop(KICK_MOTOR);
   motorForward(KICK_MOTOR, MAX_SPEED);
   delay(CLOSE_TIME);

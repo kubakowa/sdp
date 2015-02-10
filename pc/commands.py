@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import serial
 from math import sin, cos, radians, ceil
@@ -54,7 +55,7 @@ class Arduino:
 
 if __name__ == "__main__":
     generate_speed_coeff_matrix()
-    comms = Arduino('/dev/ttyACM0', 115200, 1, 1)
+    comms = Arduino('/dev/ttyACM1', 115200, 1, 1)
     while (1):
         command = raw_input('Name your command (w, s, a, d, k, o, c, q, 1, 2)')
         #command = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])

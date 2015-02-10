@@ -9,7 +9,7 @@ class Planner:
 
     def __init__(self, our_side, pitch_num):
         self._world = World(our_side, pitch_num)
-        self._world.our_defender.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 10} #10
+        self._world.our_defender.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 6}
         self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 6}
 
         # self._defender_defence_strat = DefenderDefence(self._world)
@@ -21,7 +21,7 @@ class Planner:
                                      'catch' : [AttackerPositionCatch, AttackerCatch]}
 
         self._defender_strategies = {'defence' : [DefenderPenalty],
-                                     'grab' : [AttackerGrab],
+                                     'grab' : [DefenderGrab],
                                      'pass' : [DefenderBouncePass]}
 
         self._defender_state = 'defence'
@@ -78,7 +78,8 @@ class Planner:
         ball = self._world.ball
         if robot == 'defender':
             # We have the ball in our zone, so we grab and pass:
-            if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
+            if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) or self._defender_current_strategy.current_state == 'GRABBED':
+		print 'Ball in our defending zone!'
                 # Check if we should switch from a grabbing to a scoring strategy.
                 if  self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
                     self._defender_state = 'pass'
