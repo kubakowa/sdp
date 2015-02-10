@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from Polygon.cPolygon import Polygon
 from math import cos, sin, hypot, pi, atan2
 from vision import tools

@@ -180,6 +180,7 @@ class Defender_Controller(Robot_Controller):
         left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
 	back_motor = 0
+        volatile = 0
 	
 	if left_motor==-right_motor:
 	  # turning
@@ -193,14 +194,12 @@ class Defender_Controller(Robot_Controller):
        
         if (int (action['speed'])==0):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
-        print command
        
 	if self.wasTurning==1 and 'bb_turn' not in action:
             print 'stopping back motor'
             comm.write('BB_STOP\n')
+            time.sleep(0.5)
         
-	comm.write(command)
-       
 	if 'bb_turn' in action:
             self.wasTurning=1
         else:
@@ -208,31 +207,34 @@ class Defender_Controller(Robot_Controller):
 
         if action['kicker'] == 1:
             try:
-                comm.write('BB_KICK\n')
-                time.sleep(0.5) # because magic. booyah.
-                comm.write('BB_KICK\n')
-
+                volatile=1
+                command='BB_KICK\n'
             except StandardError:
                 pass
         elif  action['kicker'] == 2:
             try:
-                comm.write('BB_OPEN\n')
-                time.sleep(0.8) # because magic. booyah.
-                comm.write('BB_OPEN\n')
-                time.sleep(0.8) # because magic. booyah.
-                comm.write('BB_OPEN\n')
+                volatile=1
+                command ='BB_OPEN\n'
             except StandardError:
                 pass
             
         elif action['catcher'] != 0:
             try:
-                comm.write('BB_CLOSE\n')
-                time.sleep(0.5)
-                comm.write('BB_CLOSE\n')
-		print ('SENDING GRAB COMMAND')
+                volatile=1
+                command='BB_CLOSE\n'
             except StandardError:
                 pass
-
+        if volatile:
+            comm.write(command)
+            comm.write(command)
+            time.sleep(0.4)
+            comm.write(command)
+            comm.write(command)
+            time.sleep(0.4)
+            comm.write(command)
+            comm.write(command)
+        print command
+        comm.write(command)
     def shutdown(self, comm):
         comm.write('BB_STOP\n')
 
@@ -296,8 +298,13 @@ class Attacker_Controller(Robot_Controller):
             
         elif action['catcher'] != 0:
             try:
+                print 'CLOSIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIING'
                 comm.write('BB_CLOSE\n')
                 time.sleep(0.5)
+                print 'CLOSIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIING'
+                comm.write('BB_CLOSE\n')
+                time.sleep(0.5)
+                print 'CLOSIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIING'
                 comm.write('BB_CLOSE\n')
             except StandardError:
                 pass
