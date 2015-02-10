@@ -22,7 +22,7 @@ class Planner:
 
         self._defender_strategies = {'defence' : [DefenderPenalty],
                                      'grab' : [AttackerGrab],
-                                     'pass' : [DefenderBouncePass]}ls
+                                     'pass' : [DefenderBouncePass]}
 
         self._defender_state = 'defence'
         self._defender_current_strategy = self.choose_defender_strategy(self._world)
