@@ -555,7 +555,7 @@ class AttackerScore(Strategy):
             self.current_state = self.SHOOT
             return do_nothing()
         else:
-            return calculate_motor_speed(1, angle)
+            return calculate_motor_speed(-1, angle)
 
     def shoot(self):
         """

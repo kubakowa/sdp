@@ -128,9 +128,11 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
 
     if not (displacement is None):
         bb_speed=1
+        if displacement==-1:
+            bb_speed=0 # this is if we are turning for a scoring shot
 
         if (displacement < DISTANCE_MATCH_THRESHOLD) and (abs(angle)<angle_thresh):
-            return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            return {'left_motor': 50, 'right_motor': 50, 'kicker': 0, 'catcher': 0, 'speed': 0}
         
         distThreshFast=70
         if displacement>distThreshFast:
@@ -147,6 +149,8 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
             else:
                 #print 'angle still too big for stepping'
                 bb_speed=1
+                if displacement==-1:
+                    bb_speed=0 # this is if we are turning for a scoring shot
             #BB
             if angle<0:
                 speed1=angleTurnPower
