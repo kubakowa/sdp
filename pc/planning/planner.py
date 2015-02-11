@@ -9,15 +9,15 @@ class Planner:
 
     def __init__(self, our_side, pitch_num):
         self._world = World(our_side, pitch_num)
-        self._world.our_defender.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 6}
-        self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 6}
+        self._world.our_defender.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -3}
+        self._world.our_attacker.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -3}
 
         # self._defender_defence_strat = DefenderDefence(self._world)
         # self._defender_attack_strat = DefaultDefenderAttack(self._world)
 
         self._attacker_strategies = {'defence' : [AttackerDefend],
                                      'grab' : [AttackerGrab, AttackerGrabCareful],
-                                     'score' : [AttackerDriveByTurn, AttackerDriveBy, AttackerTurnScore, AttackerScoreDynamic],
+                                     'score' : [AttackerScore],
                                      'catch' : [AttackerPositionCatch, AttackerCatch]}
 
         self._defender_strategies = {'defence' : [DefenderPenalty],
@@ -76,10 +76,17 @@ class Planner:
         their_defender = self._world.their_defender
         their_attacker = self._world.their_attacker
         ball = self._world.ball
+        if robot=='attacker':
+            print "planner starts. Initial attacker strategy: ", self._attacker_state
+        #print our_attacker.catcher
+        #print ball.x
+        #print ball.y
+        #print '-------------------------------------------------------'
+
         if robot == 'defender':
             # We have the ball in our zone, so we grab and pass:
-            if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) or self._defender_current_strategy.current_state == 'GRABBED':
-		print 'Ball in our defending zone!'
+            if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
+		#print 'Ball in our defending zone!'
                 # Check if we should switch from a grabbing to a scoring strategy.
                 if  self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
                     self._defender_state = 'pass'
@@ -98,7 +105,7 @@ class Planner:
 	    
 	    # Otherwise, we need to defend:
             else:
-		print 'Ball not in our defending zone, DEFENDING!'
+		#print 'Ball not in our defending zone, DEFENDING!'
                 # If the bal is not in the defender's zone, the state should always be 'defend'.
                 if not self._defender_state == 'defence':
                     self._defender_state = 'defence'
@@ -117,7 +124,6 @@ class Planner:
 #milestone 2
             # If ball is in our attacker zone, then grab the ball and score:
             elif self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y):
-
                 # Check if we should switch from a grabbing to a scoring strategy.
                 if self._attacker_state == 'grab' and self._attacker_current_strategy.current_state == 'GRABBED':
                     if our_attacker.has_ball(ball):
@@ -126,43 +132,29 @@ class Planner:
                         self._attacker_state = 'grab'
                     self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
 
-                elif self._attacker_state == 'grab':
-                    # Switch to careful mode if the ball is too close to the wall.
-
-            #BB not really need for milestone 2
-                    if abs(self._world.ball.y - self._world.pitch.height) < 0 or abs(self._world.ball.y) < 0:
-                        if isinstance(self._attacker_current_strategy, AttackerGrab):
-                            self._attacker_current_strategy = AttackerGrabCareful(self._world)
-
-                    else:
-                        if isinstance(self._attacker_current_strategy, AttackerGrabCareful):
-                            self._attacker_current_strategy = AttackerGrab(self._world)
-
                 # Check if we should switch from a defence to a grabbing strategy.
                 elif self._attacker_state in ['defence', 'catch'] :
                     self._attacker_state = 'grab'
                     self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
 
+#milestone 2 scoring
                 elif self._attacker_state == 'score' and self._attacker_current_strategy.current_state == 'FINISHED':
                     self._attacker_state = 'grab'
-                    self
                     self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
 
                 elif self._attacker_state == 'score':
-                    if not our_attacker.has_ball(ball):
+                    if our_attacker.catcher=='open':
+                        import ipdb
+                        ipdb.set_trace()
                         self._attacker_state = 'grab'
                         self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
-                return self._attacker_current_strategy.generate()
+		print 'GENERATING ATTACKER STRATEGY. strat:'
+                print  self._attacker_state 
 
-
-#milestone 2
-            # If the ball is in our defender zone, prepare to catch the passed ball:
-            elif self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) or \
-                 self._attacker_state == 'catch':
-                 # self._world.pitch.zones[their_attacker.zone].isInside(ball.x, ball.y):
-                if not self._attacker_state == 'catch':
-                    self._attacker_state = 'catch'
-                    self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
-                return self._attacker_current_strategy.generate()
+		return self._attacker_current_strategy.generate()
+            elif self._attacker_current_strategy.current_state == 'GRABBED':
+                 print 'returning a pre-nothing-matched-thing'
+                 return self._attacker_current_strategy.generate()
             else:
+		print 'Nothing matched, calling 0 0 0'
                 return calculate_motor_speed(0, 0)
