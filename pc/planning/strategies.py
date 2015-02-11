@@ -66,19 +66,19 @@ class DefenderPenalty(Strategy):
         # Predict where they are aiming.
 	if self.ball.velocity <= BALL_VELOCITY: 
             predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=False)
-	    #print 'Ball is not moving (velocity %d), predicted y is %d, robot is at %d' % (self.ball.velocity, predicted_y, self.our_defender.y)
+	    print 'Ball is not moving (velocity %d), predicted y is %d, robot is at %d' % (self.ball.velocity, predicted_y, self.our_defender.y)
             return do_nothing()
 
 	# Predict where the ball is moving and try to block it.
         elif self.ball.velocity > BALL_VELOCITY:
-	    #print 'Ball is moving, try to block it!'
+	    print 'Ball is moving, try to block it!'
             predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=False)
 
             if (is_aligned(predicted_y, self.our_defender.y)):
-		#print 'Robot in position, waiting for the ball'
+		print 'Robot in position, waiting for the ball'
                 return defender_stop();
 	    else:
-		#print 'Robot not in position yet, moving towards'
+		print 'Robot not in position yet, moving towards'
             	return adjust_y_position(self.our_defender, predicted_y, self.world._our_side)
 	   
 class DefenderDefend(Strategy):
@@ -342,8 +342,8 @@ class DefenderPass(Strategy):
     attacker zone.
     '''
 
-    POSITION, ROTATE, SHOOT, FINISHED = 'POSITION', 'ROTATE', 'SHOOT', 'FINISHED'
-    STATES = [POSITION, ROTATE, SHOOT, FINISHED]
+    ROTATE, SHOOT, FINISHED = 'ROTATE', 'SHOOT', 'FINISHED'
+    STATES = [ROTATE, SHOOT, FINISHED]
 
     UP, DOWN = 'UP', 'DOWN'
 
@@ -352,53 +352,38 @@ class DefenderPass(Strategy):
 
         # Map states into functions
         self.NEXT_ACTION_MAP = {
-            self.POSITION: self.position,
 	    self.ROTATE: self.rotate,
             self.SHOOT: self.shoot,
             self.FINISHED: do_nothing
         }
 
         self.our_defender = self.world.our_defender
-        self.their_attacker = self.world.their_attacker
-        self.ball = self.world.ball
 
         # Find the position to shoot from and cache it
         self.shooting_pos = self._get_shooting_coordinates(self.our_defender)
-
-    def position(self):
-        """
-        Position the robot in the middle close to the goal. Angle does not matter.
-        Executed initially when we've grabbed the ball and want to move.
-        """
-        ideal_x, ideal_y = self.shooting_pos
-        distance, angle = self.our_defender.get_direction_to_point(ideal_x, ideal_y)
-
-        if has_matched(self.our_defender, x=ideal_x, y=ideal_y):
-            self.current_state = self.ROTATE
-            return do_nothing()
-        else:
-            return calculate_motor_speed(distance, angle)
 
     def rotate(self):
 	"""
 	Rotate
 	"""
-	ideal_x = self.world.their_goal.x
-	ideal_y = self.world.their_goal.y
+	print 'Score strategy: rotate'
 
-	distance, angle = self.our_defender.get_direction_to_point(ideal_x, ideal_y)
-	distance = None
+	angle = self.our_defender.get_rotation_to_point(self.world.their_goal.x, self.world.their_goal.y)
 
-	if has_matched(self.our_defender, x=ideal_x, y=ideal_y, angle_threshold=pi/6):
+        print 'Angle we are aiming for: %d during the shot!' % angle
+
+	if is_facing_target(angle):
             self.current_state = self.SHOOT
             return do_nothing()
         else:
-            return calculate_motor_speed_turn(distance, angle)
+            return calculate_motor_speed(-1, angle)
 
     def shoot(self):
         """
         Kick.
         """
+	print 'Kick strategy: shoot'
+
         self.current_state = self.FINISHED
         self.our_defender.catcher = 'closed'
         return kick_ball()
@@ -417,7 +402,6 @@ class DefenderPass(Strategy):
         y =  self.world.pitch.height / 2
 
         return (x, y)
-
 
 class AttackerGrab(Strategy):
 
@@ -513,8 +497,6 @@ class DefenderGrab(Strategy):
                 return grab_ball()
             else:
             	self.current_state = self.PREPARE
-                import ipdb
-                ipdb.set_trace
                 return do_nothing()
 
 class AttackerScore(Strategy):
@@ -564,7 +546,7 @@ class AttackerScore(Strategy):
 	print 'Score strategy: shoot'
 
         self.current_state = self.FINISHED
-        self.our_attacker.catcher = 'open'
+        self.our_attacker.catcher = 'closed'
         return kick_ball()
 
     def _get_shooting_coordinates(self, robot):

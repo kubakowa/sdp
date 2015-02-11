@@ -9,7 +9,7 @@ ANGLE_MATCH_THRESHOLD = pi/11
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
-BALL_VELOCITY = 5
+BALL_VELOCITY = 2
 
 def is_shot_blocked(world, our_robot, their_robot):
     '''
@@ -269,11 +269,11 @@ def adjust_y_position(robot, target_y, side):
     if disp < 0:
         # move left
         #print 'Moving left!'
-	return {'left_motor': 50, 'right_motor': -50, 'back_motor': 80, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+	return {'left_motor': 50, 'right_motor': -50, 'back_motor': 80, 'kicker': 0, 'catcher': 0, 'speed': 1, 'stop': 0, 'spin': 0}
     else:
        # move right
        #print 'Moving right!'
-       return {'left_motor': -50, 'right_motor': 50, 'back_motor': -80, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+       return {'left_motor': -50, 'right_motor': 50, 'back_motor': -80, 'kicker': 0, 'catcher': 0, 'speed': 1, 'stop': 0, 'spin': 0}
 
 def adjust_x_position(robot, target_x, side):
     disp = target_x - robot.x
@@ -291,7 +291,7 @@ def adjust_x_position(robot, target_x, side):
 
 def is_aligned(robot_coor, target):
     #print 'Align target %d, current position %d' % (target, robot_coor)
-    return abs(target - robot_coor) < DISTANCE_MATCH_THRESHOLD    
+    return abs(target - robot_coor) < DISTANCE_MATCH_THRESHOLD/2    
 
 def is_aligned_almost(robot_coor, target):
     return abs(target - robot_coor) < DISTANCE_ALMOST_THERSHOLD

@@ -101,10 +101,10 @@ class Controller:
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
 
-                if self.attacker is not None:
-                    self.attacker.execute(self.arduino, attacker_actions)
-                #if self.defender is not None:
-                #   self.defender.execute(self.arduino, defender_actions)
+                #if self.attacker is not None:
+                #    self.attacker.execute(self.arduino, attacker_actions)
+                if self.defender is not None:
+                   self.defender.execute(self.arduino, defender_actions)
 
                 # Information about the grabbers from the world
                 grabbers = {
@@ -159,7 +159,6 @@ class Robot_Controller(object):
         # TO DO
             pass
 
-
 class Defender_Controller(Robot_Controller):
     """
     Defender implementation.
@@ -175,31 +174,35 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-	print action
+        print action
 
         left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
 	back_motor = 0
-        volatile = 0
-	
+	volatile = 0
+        was_moving= 0
+        
 	if left_motor==-right_motor:
 	  # turning
 	  if 'bb_turn' in action:
 	    back_motor=right_motor
 	  # going sideways
 	  else:
-	    back_motor=-1.5*right_motor
+	    back_motor=-1.4*right_motor
 	
-        command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
+	command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
        
         if (int (action['speed'])==0):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
-       
+        
 	if self.wasTurning==1 and 'bb_turn' not in action:
             #print 'stopping back motor'
             comm.write('BB_STOP\n')
-            time.sleep(0.5)
-        
+
+	if 'stop' in action and int(action['stop']) == 1:
+	    print 'Stopping'
+	    comm.write('BB_STOP\n')
+	
 	if 'bb_turn' in action:
             self.wasTurning=1
         else:
@@ -225,20 +228,35 @@ class Defender_Controller(Robot_Controller):
             except StandardError:
                 pass
         if volatile:
-            comm.write(command)
-            comm.write(command)
-            time.sleep(0.5)
-            comm.write(command)
-            comm.write(command)
             print '!!!!sending a volatile command!!!!', command
+
+            if command=='BB_KICK\n':
+               comm.write('BB_CLOSE\n')
+               time.sleep(0.5) 
+               comm.write('BB_CLOSE\n')
+               time.sleep(0.5) 
+	    comm.write(command)
+            comm.write(command)
+            time.sleep(0.5)
+
+            comm.write(command)
+            comm.write(command)
             time.sleep(0.5)
             comm.write(command)
             comm.write(command)
+
         print command
-        comm.write(command)
+        if not (command=="BB_MOVE 0 0 0\n" or command=="BB_STEP 0 0 0\n"):
+            comm.write(command)
+            was_moving=1
+	else:
+            print 'Empty command, not sending it'
+            if (was_moving==1):
+                comm.write("BB_STOP")
+                was_moving=0
+
     def shutdown(self, comm):
         comm.write('BB_STOP\n')
-
 
 class Attacker_Controller(Robot_Controller):
     """

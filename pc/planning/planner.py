@@ -85,7 +85,18 @@ class Planner:
 
         if robot == 'defender':
             # We have the ball in our zone, so we grab and pass:
-            if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
+	    if our_defender.catcher=='closed' and self._defender_state == 'pass':
+	      # Assumed we catched successfully
+	      print 'Finish the pass, no matter what'
+	      return self._defender_current_strategy.generate()
+
+	    if self._defender_current_strategy.current_state == 'GRABBED':
+	      print 'Go to pass, no matter what is going on'
+	      self._defender_state = 'pass'
+	      self._defender_current_strategy = self.choose_defender_strategy(self._world)
+              return self._defender_current_strategy.generate()
+
+            if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and ball.velocity < BALL_VELOCITY:
 		#print 'Ball in our defending zone!'
                 # Check if we should switch from a grabbing to a scoring strategy.
                 if  self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
