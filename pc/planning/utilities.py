@@ -19,8 +19,8 @@ def is_shot_blocked(world, our_robot, their_robot):
         world, their_robot.x, our_robot, full_width=True, bounce=True)
     if predicted_y is None:
         return True
-    print '##########', predicted_y, their_robot.y, their_robot.length
-    print abs(predicted_y - their_robot.y) < their_robot.length
+    #print '##########', predicted_y, their_robot.y, their_robot.length
+    #print abs(predicted_y - their_robot.y) < their_robot.length
     return abs(predicted_y - their_robot.y) < their_robot.length
 
 
@@ -122,12 +122,14 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
     general_speed = 95 if careful else 300
     angle_thresh = 0.25
     angleIncrThresh=0.9
+    angleTurnPower=60
+    movePower=65
+    print 'angle to target: %d' %angle
 
     if not (displacement is None):
         bb_speed=1
-        if displacement < DISTANCE_MATCH_THRESHOLD:
-            print 'Displacement:', displacement
-            print 'movement action called while robot is at the ball'
+
+        if (displacement < DISTANCE_MATCH_THRESHOLD) and (abs(angle)<angle_thresh):
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
         
         distThreshFast=70
@@ -136,50 +138,51 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
 
         if abs(angle) > angle_thresh:
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
-            angleThreshIncr=1.5
+            angleThreshIncr=1.7
 
-            print ('angle to ball: ', angle)
+            #print ('angle to ball: ', angle)
             if abs(angle)<angleIncrThresh:
-                print 'angle close to needed'
+                angleTurnPower=55
                 bb_speed=0
             else:
-                print 'angle still too big for stepping'
+                #print 'angle still too big for stepping'
                 bb_speed=1
             #BB
             if angle<0:
-                speed1=45
-                speed2=-45
+                speed1=angleTurnPower
+                speed2=-angleTurnPower
             else:
-                speed1=-45
-                speed2=45
+                speed1=-angleTurnPower
+                speed2=angleTurnPower
 
 	    return {'left_motor': speed1, 'right_motor': speed2, 'back_motor':speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
        
         else:
-            print('moving to ball')
+            #print('moving to ball')
             bb_speed = 1
-            if displacement<70:
+            if displacement<80:
+                movePower=72
                 bb_speed=0
-                print 'Carefully. DISP:', displacement
-                return {'left_motor': 60, 'right_motor': 60, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
+                #print 'Carefully. DISP:', displacement
+                return {'left_motor': movePower, 'right_motor': movePower, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
             #move forward
-	    return  {'left_motor': 60, 'right_motor': 60, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
+	    return  {'left_motor': movePower, 'right_motor': movePower, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
     else:
-        print 'robot is at the ball'
+        #print 'robot is at the ball'
         if abs(angle) > angle_thresh:
-            print 'turning to ball while next to it'
-            print('angle to ball', angle)
+            #print 'turning to ball while next to it'
+            #print('angle to ball', angle)
             if abs(angle)<angleIncrThresh:
                 bb_speed=0
             else:
                 bb_speed=1
             #BB
             if angle<0:
-                speed1=60;
-                speed2=-60;
+                speed1=angleTurnPower;
+                speed2=-angleTurnPower;
             else:
-                speed1=-60;
-                speed2=60;
+                speed1=-angleTurnPower;
+                speed2=angleTurnPower;
             #turning when robot is at the ball
             return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': speed2, 'bb_turn':1}
 
@@ -204,27 +207,27 @@ def calculate_motor_speed_turn(displacement, angle, backwards_ok=False, careful=
             #BB old 7s code:  speed = (angle/pi) * MAX_ANGLE_SPEED
             angleThreshIncr=1.5
 
-            print ('angle to ball: ', angle)
+            #print ('angle to ball: ', angle)
             if abs(angle)<angleIncrThresh:
-                print 'angle close to needed'
+                #print 'angle close to needed'
                 bb_speed=0
             else:
-                print 'angle still too big for stepping'
+                #print 'angle still too big for stepping'
                 bb_speed=1
             #BB
             if angle<0:
-                speed1=45
-                speed2=-45
+                speed1=60
+                speed2=-60
             else:
-                speed1=-45
-                speed2=45
+                speed1=-60
+                speed2=60
 
 	    return {'left_motor': speed1, 'right_motor': speed2, 'back_motor':speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
        
 	else:
 
-            print 'turning to ball while next to it'
-            print('angle to ball', angle)
+           #print 'turning to ball while next to it'
+            #print('angle to ball', angle)
 
             if abs(angle)<angleIncrThresh:
                 bb_speed=0
@@ -240,7 +243,7 @@ def calculate_motor_speed_turn(displacement, angle, backwards_ok=False, careful=
             #turning when robot is at the ball
             return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': speed2, 'bb_turn':1}
     
-    print 'Should not reach this code'  
+    #print 'Should not reach this code'  
     return do_nothing()
 
 def do_nothing():
@@ -254,18 +257,18 @@ def adjust_angle(ang):
         return {'left_motor': speed, 'right_motor': -speed, 'back_motor': -speed, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 1}
 
 def adjust_y_position(robot, target_y, side):
-    print 'Adjusting y position, current position is %d, target is %d' % (robot.y, target_y)
+    #print 'Adjusting y position, current position is %d, target is %d' % (robot.y, target_y)
     disp = target_y - robot.y
     if side == 'right':
       disp = -disp
 
     if disp < 0:
         # move left
-        print 'Moving left!'
+        #print 'Moving left!'
 	return {'left_motor': 50, 'right_motor': -50, 'back_motor': 80, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
     else:
        # move right
-       print 'Moving right!'
+       #print 'Moving right!'
        return {'left_motor': -50, 'right_motor': 50, 'back_motor': -80, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
 
 def adjust_x_position(robot, target_x, side):
@@ -274,7 +277,7 @@ def adjust_x_position(robot, target_x, side):
     if side == 'right':
       disp = -disp
 
-    print 'Target: %d, Robot: %d' % (target_x, robot.x)
+    #print 'Target: %d, Robot: %d' % (target_x, robot.x)
     if disp > 0:
         # move forward
 	return {'left_motor': 100, 'right_motor': 100, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
@@ -283,7 +286,7 @@ def adjust_x_position(robot, target_x, side):
        return {'left_motor': -100, 'right_motor': -100, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
 
 def is_aligned(robot_coor, target):
-    print 'Align target %d, current position %d' % (target, robot_coor)
+    #print 'Align target %d, current position %d' % (target, robot_coor)
     return abs(target - robot_coor) < DISTANCE_MATCH_THRESHOLD    
 
 def is_aligned_almost(robot_coor, target):

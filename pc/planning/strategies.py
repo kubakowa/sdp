@@ -54,7 +54,8 @@ class DefenderPenalty(Strategy):
         self.current_state = self.DEFEND_GOAL
         if self.our_defender.catcher == 'closed':
             self.our_defender.catcher = 'open'
-            return open_catcher()
+            print 'Defender penalty opened catcher'
+	    return open_catcher()
         else:
             return do_nothing()
   
@@ -65,19 +66,19 @@ class DefenderPenalty(Strategy):
         # Predict where they are aiming.
 	if self.ball.velocity <= BALL_VELOCITY: 
             predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=False)
-	    print 'Ball is not moving (velocity %d), predicted y is %d, robot is at %d' % (self.ball.velocity, predicted_y, self.our_defender.y)
+	    #print 'Ball is not moving (velocity %d), predicted y is %d, robot is at %d' % (self.ball.velocity, predicted_y, self.our_defender.y)
             return do_nothing()
 
 	# Predict where the ball is moving and try to block it.
         elif self.ball.velocity > BALL_VELOCITY:
-	    print 'Ball is moving, try to block it!'
+	    #print 'Ball is moving, try to block it!'
             predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=False)
 
             if (is_aligned(predicted_y, self.our_defender.y)):
-		print 'Robot in position, waiting for the ball'
+		#print 'Robot in position, waiting for the ball'
                 return defender_stop();
 	    else:
-		print 'Robot not in position yet, moving towards'
+		#print 'Robot not in position yet, moving towards'
             	return adjust_y_position(self.our_defender, predicted_y, self.world._our_side)
 	   
 class DefenderDefend(Strategy):
@@ -133,16 +134,16 @@ class DefenderDefend(Strategy):
         """
         Align yourself to the middle of the goal.
         """
-	print 'Robot y: %d, Goal centre: %d' % (self.our_defender.y, self.our_goal.y)
+	#print 'Robot y: %d, Goal centre: %d' % (self.our_defender.y, self.our_goal.y)
 
 	if not is_aligned(self.our_defender.y, self.our_goal.y):
             return adjust_y_position(self.our_defender, self.our_goal.y, self.world._our_side)
 	elif not is_facing_target(self.our_defender.get_rotation_to_point(self.their_goal.x, self.their_goal.y)):
 	    self.current_state = self.ANG_UNALIGNED
-	    print 'Robot not aligned'
+	    #print 'Robot not aligned'
 	    return defender_stop()
         else:
-	    print 'Robot aligned'
+	    #print 'Robot aligned'
 	    self.current_state = self.DEFEND_GOAL
             return defender_stop()
         
@@ -249,7 +250,8 @@ class AttackerCatch(Strategy):
         self.current_state = self.CATCH
         if self.our_attacker.catcher == 'closed':
             self.our_attacker.catcher = 'open'
-            return open_catcher()
+            print 'Attacker catch opened catcher'
+	    return open_catcher()
         else:
             return do_nothing()
 
@@ -290,6 +292,7 @@ class AttackerPositionCatch(Strategy):
         self.current_state = self.ALIGN
         if self.our_attacker.catcher == 'closed':
             self.our_attacker.catcher = 'open'
+	    print 'Attacker positioned catch opened catcher'
             return open_catcher()
         else:
             return do_nothing()
@@ -437,12 +440,14 @@ class AttackerGrab(Strategy):
         self.current_state = self.GO_TO_BALL
         if self.our_attacker.catcher == 'closed':
             self.our_attacker.catcher = 'open'
+	    print 'Attacker grab opened catcher'
             return open_catcher()
         else:
             return do_nothing()
 
     def position(self):
         displacement, angle = self.our_attacker.get_direction_to_point(self.ball.x, self.ball.y)
+
         if self.our_attacker.can_catch_ball(self.ball):
             self.current_state = self.GRAB_BALL
             return do_nothing()
@@ -455,8 +460,8 @@ class AttackerGrab(Strategy):
             return do_nothing()
         else:
             if self.our_attacker.can_catch_ball(self.ball):
-		print 'CAN CATCH NOW, GRAB!'
                 self.our_attacker.catcher = 'closed'
+		self.current_state = self.GRABBED
                 return grab_ball()
             else:
             	self.current_state = self.PREPARE
@@ -484,6 +489,7 @@ class DefenderGrab(Strategy):
         self.current_state = self.GO_TO_BALL
         if self.our_defender.catcher == 'closed':
             self.our_defender.catcher = 'open'
+	    print 'Defender grab opened catcher'
             return open_catcher()
         else:
             return do_nothing()
@@ -507,211 +513,78 @@ class DefenderGrab(Strategy):
                 return grab_ball()
             else:
             	self.current_state = self.PREPARE
+                import ipdb
+                ipdb.set_trace
                 return do_nothing()
 
-class AttackerScoreDynamic(Strategy):
+class AttackerScore(Strategy):
     """
-    Goal scoring tactic. Assumes it will be executed when the robot has grabbed the ball.
-
-    Outline:
-        1) Position the robot closer to the border line.
-        2) Move to aim into one corner of the goal.
-        3) Re-rotate and aim into the other corner
-        4) Shoot
-
-    Effectivness:
-        * Only effective if their attacker is not standing on the white line
-          close to us. They need to be at least 40px (the side facing us) from
-          the division line between defender and attacker.
-        * If opponent's grabber is extended we may not get any leavway for scoring.
-          This assumes that they effectively predict direction and optimize for
-          maximum blocking area.
-
-    Maths:
-        * When the opponent is defending ideally, we have about 15 degrees leaveway to
-          score
-        * Each ~5 pixels away from the ideal position we lose 2 degrees
-            - Imprecision of 15px results in highly unprobable score in CONFUSE1.
-            - Probability of scoring increases in CONFUSE2
-        * Size of their grabber in extended position is not factored in
-
-    TODO:
-        * Finish implementing
-        * After CONFUSE1, check if we have a clear shot at the goal and shoot
-            - Defender's velocity should be taken into consideration
-                - if velocity high, we are better off pulling off the CONFUSE2 part
-                - if low, best to try to shoot as opponent's vision/delay may not pickup the trick
-        * Attempt to pick sides based on their robot velocity as well
-        * Contigency
-            - If both CONFUSE1 and CONFUSE2 fail, we may switch strategies or resort to a shot
-              either UP or DOWN, based on their position.
     """
-    GRABBED, POSITION = 'GRABBED', 'POSITION'
-    CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
-    STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
+    ROTATE, SHOOT, FINISHED = 'ROTATE', 'SHOOT', 'FINISHED'
+    STATES = [ROTATE, SHOOT, FINISHED]
 
     UP, DOWN = 'UP', 'DOWN'
-    GOAL_SIDES = [UP, DOWN]
-
-    SHOOTING_X_OFFSET = 85
-    GOAL_CORNER_OFFSET = 55
 
     def __init__(self, world):
-        super(AttackerScoreDynamic, self).__init__(world, self.STATES)
+        super(AttackerScore, self).__init__(world, self.STATES)
+
         # Map states into functions
         self.NEXT_ACTION_MAP = {
-            self.GRABBED: self.position,
-            self.POSITION: self.confuse_one,
-            self.CONFUSE1: self.confuse_two,
-            self.CONFUSE2: self.shoot,
-            self.SHOOT: self.shoot
+	    self.ROTATE: self.rotate,
+            self.SHOOT: self.shoot,
+            self.FINISHED: do_nothing
         }
 
         self.our_attacker = self.world.our_attacker
-        self.their_defender = self.world.their_defender
+        self.ball = self.world.ball
 
         # Find the position to shoot from and cache it
         self.shooting_pos = self._get_shooting_coordinates(self.our_attacker)
 
-        # Remember which side we picked first
-        self.fake_shoot_side = None
+    def rotate(self):
+	"""
+	Rotate
+	"""
+	print 'Score strategy: rotate'
 
-    def generate(self):
-        """
-        Pick an action based on current state.
-        """
-        print 'BALL', self.world.ball
-        return self.NEXT_ACTION_MAP[self.current_state]()
+	ideal_x = self.world.their_goal.x
+	ideal_y = self.world.their_goal.y
 
-    def position(self):
-        """
-        Position the robot in the middle close to the goal. Angle does not matter.
-        Executed initially when we've grabbed the ball and want to move.
-        """
-        ideal_x, ideal_y = self.shooting_pos
-        distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
+	distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
+	distance = 1
+        print 'angle we are aiming for: %d' % angle
 
-        if has_matched(self.our_attacker, x=ideal_x, y=ideal_y):
-            # We've reached the POSITION state.
-            self.current_state = self.POSITION
-            return self.confuse_one()
-
-        # We still need to drive
-        return calculate_motor_speed(distance, angle)
-
-    def confuse_one(self):
-        """
-        Pick a side and aim at it. Executed when we've reached the POSITION state.
-        """
-        # Initialize fake shoot side if not available
-        if self.fake_shoot_side is None:
-            self.fake_shoot_side = self._get_fake_shoot_side(self.their_defender)
-
-        target_x = self.world.their_goal.x
-        target_y = self._get_goal_corner_y(self.fake_shoot_side)
-
-        print 'SIDE:', self.fake_shoot_side
-
-        print 'TARGET_Y', target_y
-        print 'STATE:', self.current_state
-
-        distance, angle = self.our_attacker.get_direction_to_point(target_x, target_y)
-
-        print 'DIRECTION TO POINT', distance, angle
-
-        if has_matched(self.our_attacker, angle=angle):
-            # TODO: Shoot if we have a clear shot and the oppononet's velocity is favourable for us
-            y = self.their_defender.y
-            middle = self.world.pitch.height / 2
-
-            opp_robot_side = self._get_fake_shoot_side(self.their_defender)
-            if opp_robot_side != self.fake_shoot_side:
-                # We've finished CONFUSE1
-                self.current_state = self.CONFUSE1
-                return self.confuse_two()
-            else:
-                return calculate_motor_speed(0, 0)
-
-        # Rotate on the spot
-        return calculate_motor_speed(None, angle)
-
-    def confuse_two(self):
-        """
-        Rotate to the other side and make them go 'Wow, much rotate'.
-        """
-        other_side = self._get_other_side(self.fake_shoot_side)
-        print 'OTHER SIDE:', other_side
-        # Determine targets
-        target_x = self.world.their_goal.x
-        target_y = self._get_goal_corner_y(other_side)
-
-        print 'OTHER SIDE TARGET Y', target_y
-
-        angle = self.our_attacker.get_rotation_to_point(target_x, target_y)
-
-        print 'OTHER SIDE ANGLE:', angle
-
-        if has_matched(self.our_attacker, angle=angle, angle_threshold=self.PRECISE_BALL_ANGLE_THRESHOLD):
-            # We've finished CONFUSE2
+	if True:
+	#if has_matched(self.our_attacker, x=ideal_x, y=ideal_y, angle_threshold=pi/3):
             self.current_state = self.SHOOT
-            return self.shoot()
-            # pass
-            pass
-
-        # Rotate on the spot
-        return calculate_motor_speed(None, angle, careful=True)
+            return do_nothing()
+        else:
+            return calculate_motor_speed(distance, angle)
 
     def shoot(self):
         """
         Kick.
         """
-        self.current_state = self.SHOOT
+	print 'Score strategy: shoot'
+
+        self.current_state = self.FINISHED
+        self.our_attacker.catcher = 'open'
         return kick_ball()
 
     def _get_shooting_coordinates(self, robot):
         """
-        Retrive the coordinates to which we need to move before we set up the confuse shot.
+        Retrive the coordinates to which we need to move before we set up the pass.
         """
         zone_index = robot.zone
         zone_poly = self.world.pitch.zones[zone_index][0]
 
-        # Find the x coordinate of where we need to go
-        # Find which function to use, min for us on the right, max otherwise
-        f = max if zone_index == 2 else min
-        x = int(f(zone_poly, key=lambda z: z[0])[0])
+        min_x = int(min(zone_poly, key=lambda z: z[0])[0])
+        max_x = int(max(zone_poly, key=lambda z: z[0])[0])
 
-        # Offset x to be a wee bit inside our zone
-        x = x - self.SHOOTING_X_OFFSET if zone_index == 2 else x + self.SHOOTING_X_OFFSET
-
-        # y is simply middle of the pitch
-        y = self.world.pitch.height / 2
+        x = min_x + (max_x - min_x) / 2
+        y =  self.world.pitch.height / 2
 
         return (x, y)
-
-    def _get_fake_shoot_side(self, robot):
-        """
-        Compare the location of their robot with the middle to pick the first side
-        """
-        y = robot.y
-        middle = self.world.pitch.height / 2
-        return self.UP if y < middle else self.DOWN
-
-    def _get_other_side(self, side):
-        """
-        Determine the other side to rotate to based on the CONFUSE1 side.
-        """
-        assert side in self.GOAL_SIDES
-        return self.UP if side == self.DOWN else self.DOWN
-
-    def _get_goal_corner_y(self, side):
-        """
-        Get the coordinates of where to aim / shoot.
-        """
-        assert side in self.GOAL_SIDES
-        if side == self.UP:
-            # y coordinate of the goal is DOWN, offset by the width
-            return self.world.their_goal.y + self.world.their_goal.width / 2 - int(self.GOAL_CORNER_OFFSET * 1.5)
-        return self.world.their_goal.y - self.world.their_goal.width / 2 + self.GOAL_CORNER_OFFSET + 20
 
 
 class AttackerDriveBy(Strategy):
@@ -906,7 +779,7 @@ class AttackerDriveByTurn(Strategy):
 
         distance, angle = self.our_attacker.get_direction_to_point(self.our_attacker.x, y)
         if has_matched(self.our_attacker, x=self.our_attacker.x, y=y):
-            print abs(self.our_attacker.y - self.their_defender.y)
+            #print abs(self.our_attacker.y - self.their_defender.y)
             if abs(self.our_attacker.y - self.their_defender.y) > 30 or self.laps_left == 0:
                 self.current_state = self.SHOOT
             else:
@@ -1107,7 +980,7 @@ class AttackerGrabCareful(Strategy):
         our_attacker = self.world.our_attacker
         ball = self.world.ball
 
-        print 'BALL SIDE', self.ball_side
+        #print 'BALL SIDE', self.ball_side
 
         distance, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
 
@@ -1116,7 +989,7 @@ class AttackerGrabCareful(Strategy):
             return self.grab()
 
         motors = calculate_motor_speed(None, angle, careful=True)
-        print 'MOTORS', motors
+        #print 'MOTORS', motors
         return motors
 
 
