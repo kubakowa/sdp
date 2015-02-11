@@ -547,19 +547,15 @@ class AttackerScore(Strategy):
 	"""
 	print 'Score strategy: rotate'
 
-	ideal_x = self.world.their_goal.x
-	ideal_y = self.world.their_goal.y
+	angle = self.our_attacker.get_rotation_to_point(self.world.their_goal.x, self.world.their_goal.y)
 
-	distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
-	distance = 1
-        print 'angle we are aiming for: %d' % angle
+        print 'Angle we are aiming for: %d during the shot!' % angle
 
-	if True:
-	#if has_matched(self.our_attacker, x=ideal_x, y=ideal_y, angle_threshold=pi/3):
+	if is_facing_target(angle):
             self.current_state = self.SHOOT
             return do_nothing()
         else:
-            return calculate_motor_speed(distance, angle)
+            return calculate_motor_speed(1, angle)
 
     def shoot(self):
         """

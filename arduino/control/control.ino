@@ -16,7 +16,7 @@ int KICK_TIME = 400;
 int GRAB_TIME = 200;
 int CLOSE_TIME = 250;
 int MAX_SPEED = 100;
-int OPEN_SPEED = 30;
+int OPEN_SPEED = 45;
 
 // command
 SerialCommand comm;

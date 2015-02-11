@@ -299,9 +299,16 @@ class Attacker_Controller(Robot_Controller):
                 pass
         if volatile:
             print '!!!!sending a volatile command!!!!', command
-            comm.write(command)
+
+            if command=='BB_KICK\n':
+               comm.write('BB_CLOSE\n')
+               time.sleep(0.5) 
+               comm.write('BB_CLOSE\n')
+               time.sleep(0.5) 
+	    comm.write(command)
             comm.write(command)
             time.sleep(0.5)
+
             comm.write(command)
             comm.write(command)
             time.sleep(0.5)

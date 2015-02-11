@@ -122,9 +122,9 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
     general_speed = 95 if careful else 300
     angle_thresh = 0.25
     angleIncrThresh=0.9
-    angleTurnPower=60
+    angleTurnPower=52
     movePower=65
-    print 'angle to target: %d' %angle
+    print 'angle to target: %f' %angle
 
     if not (displacement is None):
         bb_speed=1
