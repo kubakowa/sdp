@@ -231,18 +231,16 @@ class Defender_Controller(Robot_Controller):
             print '!!!!sending a volatile command!!!!', command
 
             if command=='BB_KICK\n':
-               comm.write('BB_CLOSE\n')
-               time.sleep(0.5) 
-               comm.write('BB_CLOSE\n')
-               time.sleep(0.5) 
+               comm.write('\nBB_CLOSE\n')
+               time.sleep(0.8) 
+               comm.write('\nBB_CLOSE\n')
+               time.sleep(0.8) 
 	    comm.write(command)
+            time.sleep(0.8)
             comm.write(command)
-            time.sleep(0.5)
-
+            time.sleep(0.8)
             comm.write(command)
-            comm.write(command)
-            time.sleep(0.5)
-            comm.write(command)
+            time.sleep(0.8)
             comm.write(command)
 
         print command
@@ -252,7 +250,8 @@ class Defender_Controller(Robot_Controller):
 	else:
             print 'Empty command, not sending it'
             if (was_moving==1):
-                comm.write("BB_STOP")
+                comm.write("BB_STOP\n")
+                print 'sending a stop command to stop a previous move'
                 was_moving=0
 
     def shutdown(self, comm):
@@ -324,13 +323,9 @@ class Attacker_Controller(Robot_Controller):
                comm.write('BB_CLOSE\n')
                time.sleep(0.5) 
 	    comm.write(command)
-            comm.write(command)
-            time.sleep(0.5)
-
-            comm.write(command)
-            comm.write(command)
             time.sleep(0.5)
             comm.write(command)
+            time.sleep(0.5)
             comm.write(command)
 
         print command

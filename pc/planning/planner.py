@@ -9,8 +9,8 @@ class Planner:
 
     def __init__(self, our_side, pitch_num):
         self._world = World(our_side, pitch_num)
-        self._world.our_defender.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -4}
-        self._world.our_attacker.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -4}
+        self._world.our_defender.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -5.5}
+        self._world.our_attacker.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -5.5}
 
         # self._defender_defence_strat = DefenderDefence(self._world)
         # self._defender_attack_strat = DefaultDefenderAttack(self._world)
@@ -155,8 +155,6 @@ class Planner:
 
                 elif self._attacker_state == 'score':
                     if our_attacker.catcher=='open':
-                        import ipdb
-                        ipdb.set_trace()
                         self._attacker_state = 'grab'
                         self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
 		print 'GENERATING ATTACKER STRATEGY. strat:'
