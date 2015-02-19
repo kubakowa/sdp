@@ -68,7 +68,6 @@ class Controller:
 
         self.preprocessing = Preprocessing()
 
-        self.attacker = Attacker_Controller()
         self.defender = Defender_Controller()
 
     def wow(self):
@@ -79,6 +78,7 @@ class Controller:
         timer = time.clock()
         try:
             c = True
+	    
             while c != 27:  # the ESC key
 
                 frame = self.camera.get_frame()
@@ -92,17 +92,17 @@ class Controller:
                 # model_positions have their y coordinate inverted
 
 
-        #find positions of objects in current preprocessed frame
+		#find positions of objects in current preprocessed frame
                 model_positions, regular_positions = self.vision.locate(frame)
                 model_positions = self.postprocessing.analyze(model_positions)
 
                 # Find appropriate action
                 self.planner.update_world(model_positions) #planner now has an up-to-date world model
-                attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
+		
+		# Update attacker action
+		attacker_actions = 'unknown'
 
-                #if self.attacker is not None:
-                 #   self.attacker.execute(self.arduino, attacker_actions)
                 if self.defender is not None:
                    self.defender.execute(self.arduino, defender_actions)
 
@@ -113,8 +113,8 @@ class Controller:
                 }
 
                 # Information about states
-                attackerState = (self.planner.attacker_state, self.planner.attacker_strat_state)
                 defenderState = (self.planner.defender_state, self.planner.defender_strat_state)
+		attackerState = ('unknown', 'unknown')
 
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(2) & 0xFF
@@ -131,15 +131,11 @@ class Controller:
         except:
             if self.defender is not None:
                 self.defender.shutdown(self.arduino)
-            if self.attacker is not None:
-                self.attacker.shutdown(self.arduino)
             raise
 
         finally:
             # Write the new calibrations to a file.
             tools.save_colors(self.pitch, self.calibration)
-            if self.attacker is not None:
-                self.attacker.shutdown(self.arduino)
             if self.defender is not None:
                 self.defender.shutdown(self.arduino)
 
@@ -196,11 +192,9 @@ class Defender_Controller(Robot_Controller):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
         
 	if self.wasTurning==1 and 'bb_turn' not in action:
-            #print 'stopping back motor'
             comm.write('BB_STOP\n')
 
 	if 'stop' in action and int(action['stop']) == 1:
-	    print 'Stopping'
 	    comm.write('BB_STOP\n')
 	
 	if 'bb_turn' in action:
@@ -227,9 +221,8 @@ class Defender_Controller(Robot_Controller):
                 command='BB_CLOSE\n'
             except StandardError:
                 pass
-        if volatile:
-            print '!!!!sending a volatile command!!!!', command
 
+        if volatile:
             if command=='BB_KICK\n':
                comm.write('\nBB_CLOSE\n')
                time.sleep(0.8) 
@@ -248,90 +241,9 @@ class Defender_Controller(Robot_Controller):
             comm.write(command)
             was_moving=1
 	else:
-            print 'Empty command, not sending it'
             if (was_moving==1):
                 comm.write("BB_STOP\n")
-                print 'sending a stop command to stop a previous move'
                 was_moving=0
-
-    def shutdown(self, comm):
-        comm.write('BB_STOP\n')
-
-class Attacker_Controller(Robot_Controller):
-    """
-    Attacker implementation.
-    """
-    wasTurning=0
-    def __init__(self):
-        """
-        Do the same setup as the Robot class, as well as anything specific to the Attacker.
-        """
-        super(Attacker_Controller, self).__init__()
-
-    def execute(self, comm, action):
-        """
-        Execute robot action.
-        """
-        print action
-
-        left_motor = int(action['left_motor'])
-        right_motor = int(action['right_motor'])
-	back_motor = 0
-	volatile = 0
-
-	if left_motor==-right_motor:
-            back_motor=right_motor
-        command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
-       
-        if (int (action['speed'])==0):
-            command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
-        
-	if self.wasTurning==1 and 'bb_turn' not in action:
-            #print 'stopping back motor'
-            comm.write('BB_STOP\n')
-	 
-	if 'bb_turn' in action:
-            self.wasTurning=1
-        else:
-            self.wasTurning=0
-
-        if action['kicker'] == 1:
-            try:
-                volatile=1
-                command='BB_KICK\n'
-            except StandardError:
-                pass
-        elif  action['kicker'] == 2:
-            try:
-                volatile=1
-                command ='BB_OPEN\n'
-            except StandardError:
-                pass
-            
-        elif action['catcher'] != 0:
-            try:
-                volatile=1
-                command='BB_CLOSE\n'
-            except StandardError:
-                pass
-        if volatile:
-            print '!!!!sending a volatile command!!!!', command
-
-            if command=='BB_KICK\n':
-               comm.write('BB_CLOSE\n')
-               time.sleep(0.8) 
-               comm.write('BB_CLOSE\n')
-               time.sleep(0.8) 
-	    comm.write(command)
-            time.sleep(0.8)
-            comm.write(command)
-            time.sleep(0.8)
-            comm.write(command)
-            time.sleep(0.8)
-            comm.write(command)
-
-        print command
-        comm.write(command)
 
     def shutdown(self, comm):
         comm.write('BB_STOP\n')
