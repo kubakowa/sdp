@@ -178,6 +178,124 @@ class DefenderDefend(Strategy):
         else:
             return self.world.our_goal.x - self.GOAL_ALMOST_OFFSET
 
+class DefenderPass(Strategy):
+    '''
+    Once the defender grabs the ball, move to the center of the zone and shoot towards
+    the wall of the center of the opposite attacker zone, in order to reach our_attacker
+    attacker zone.
+    '''
+
+    ROTATE, SHOOT, FINISHED = 'ROTATE', 'SHOOT', 'FINISHED'
+    STATES = [ROTATE, SHOOT, FINISHED]
+
+    UP, DOWN = 'UP', 'DOWN'
+
+    def __init__(self, world):
+        super(DefenderPass, self).__init__(world, self.STATES)
+
+        # Map states into functions
+        self.NEXT_ACTION_MAP = {
+	    self.ROTATE: self.rotate,
+            self.SHOOT: self.shoot,
+            self.FINISHED: do_nothing
+        }
+
+        self.our_defender = self.world.our_defender
+
+        # Find the position to shoot from and cache it
+        self.shooting_pos = self._get_shooting_coordinates(self.our_defender)
+
+    def rotate(self):
+	"""
+	Rotate
+	"""
+	print 'Score strategy: rotate'
+
+	angle = self.our_defender.get_rotation_to_point(self.world.their_goal.x, self.world.their_goal.y)
+
+        print 'Angle we are aiming for: %d during the shot!' % angle
+
+	if is_facing_target(angle):
+            self.current_state = self.SHOOT
+            return do_nothing()
+        else:
+            return calculate_motor_speed(-1, angle)
+
+    def shoot(self):
+        """
+        Kick.
+        """
+	print 'Kick strategy: shoot'
+
+        self.current_state = self.FINISHED
+        self.our_defender.catcher = 'closed'
+        return kick_ball()
+
+    def _get_shooting_coordinates(self, robot):
+        """
+        Retrive the coordinates to which we need to move before we set up the pass.
+        """
+        zone_index = robot.zone
+        zone_poly = self.world.pitch.zones[zone_index][0]
+
+        min_x = int(min(zone_poly, key=lambda z: z[0])[0])
+        max_x = int(max(zone_poly, key=lambda z: z[0])[0])
+
+        x = min_x + (max_x - min_x) / 2
+        y =  self.world.pitch.height / 2
+
+        return (x, y)
+
+class DefenderGrab(Strategy):
+
+    PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED = 'PREPARE', 'GO_TO_BALL', 'GRAB_BALL', 'GRABBED'
+    STATES = [PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED]
+    def __init__(self, world):
+        super(DefenderGrab, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+            self.PREPARE: self.prepare,
+            self.GO_TO_BALL: self.position,
+            self.GRAB_BALL: self.grab,
+            self.GRABBED: do_nothing
+        }
+
+        self.our_defender = self.world.our_defender
+        self.ball = self.world.ball
+
+    def prepare(self):
+        self.current_state = self.GO_TO_BALL
+        if self.our_defender.catcher == 'closed':
+            self.our_defender.catcher = 'open'
+	    print 'Defender grab opened catcher'
+            return open_catcher()
+        else:
+            return do_nothing()
+
+    def position(self):
+        displacement, angle = self.our_defender.get_direction_to_point(self.ball.x, self.ball.y)
+        if self.our_defender.can_catch_ball(self.ball):
+            self.current_state = self.GRAB_BALL
+            return do_nothing()
+        else:
+            return calculate_motor_speed(displacement, angle)
+
+    def grab(self):
+        if self.our_defender.has_ball(self.ball):
+            self.current_state = self.GRABBED
+            return do_nothing()
+        else:
+            if self.our_defender.can_catch_ball(self.ball):
+		print 'CAN CATCH NOW, GRAB!'
+                self.our_defender.catcher = 'closed'
+                return grab_ball()
+            else:
+            	self.current_state = self.PREPARE
+                return do_nothing()
+
+###########################################################################
+# END OF DEFENDER STRATEGIES
+###########################################################################
 
 class AttackerDefend(Strategy):
 
@@ -250,7 +368,6 @@ class AttackerCatch(Strategy):
         self.current_state = self.CATCH
         if self.our_attacker.catcher == 'closed':
             self.our_attacker.catcher = 'open'
-            print 'Attacker catch opened catcher'
 	    return open_catcher()
         else:
             return do_nothing()
@@ -292,7 +409,6 @@ class AttackerPositionCatch(Strategy):
         self.current_state = self.ALIGN
         if self.our_attacker.catcher == 'closed':
             self.our_attacker.catcher = 'open'
-	    print 'Attacker positioned catch opened catcher'
             return open_catcher()
         else:
             return do_nothing()
@@ -334,75 +450,6 @@ class AttackerPositionCatch(Strategy):
         
         return do_nothing()
 
-
-class DefenderPass(Strategy):
-    '''
-    Once the defender grabs the ball, move to the center of the zone and shoot towards
-    the wall of the center of the opposite attacker zone, in order to reach our_attacker
-    attacker zone.
-    '''
-
-    ROTATE, SHOOT, FINISHED = 'ROTATE', 'SHOOT', 'FINISHED'
-    STATES = [ROTATE, SHOOT, FINISHED]
-
-    UP, DOWN = 'UP', 'DOWN'
-
-    def __init__(self, world):
-        super(DefenderPass, self).__init__(world, self.STATES)
-
-        # Map states into functions
-        self.NEXT_ACTION_MAP = {
-	    self.ROTATE: self.rotate,
-            self.SHOOT: self.shoot,
-            self.FINISHED: do_nothing
-        }
-
-        self.our_defender = self.world.our_defender
-
-        # Find the position to shoot from and cache it
-        self.shooting_pos = self._get_shooting_coordinates(self.our_defender)
-
-    def rotate(self):
-	"""
-	Rotate
-	"""
-	print 'Score strategy: rotate'
-
-	angle = self.our_defender.get_rotation_to_point(self.world.their_goal.x, self.world.their_goal.y)
-
-        print 'Angle we are aiming for: %d during the shot!' % angle
-
-	if is_facing_target(angle):
-            self.current_state = self.SHOOT
-            return do_nothing()
-        else:
-            return calculate_motor_speed(-1, angle)
-
-    def shoot(self):
-        """
-        Kick.
-        """
-	print 'Kick strategy: shoot'
-
-        self.current_state = self.FINISHED
-        self.our_defender.catcher = 'closed'
-        return kick_ball()
-
-    def _get_shooting_coordinates(self, robot):
-        """
-        Retrive the coordinates to which we need to move before we set up the pass.
-        """
-        zone_index = robot.zone
-        zone_poly = self.world.pitch.zones[zone_index][0]
-
-        min_x = int(min(zone_poly, key=lambda z: z[0])[0])
-        max_x = int(max(zone_poly, key=lambda z: z[0])[0])
-
-        x = min_x + (max_x - min_x) / 2
-        y =  self.world.pitch.height / 2
-
-        return (x, y)
-
 class AttackerGrab(Strategy):
 
     PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED = 'PREPARE', 'GO_TO_BALL', 'GRAB_BALL', 'GRABBED'
@@ -424,7 +471,6 @@ class AttackerGrab(Strategy):
         self.current_state = self.GO_TO_BALL
         if self.our_attacker.catcher == 'closed':
             self.our_attacker.catcher = 'open'
-	    print 'Attacker grab opened catcher'
             return open_catcher()
         else:
             return do_nothing()
@@ -446,54 +492,6 @@ class AttackerGrab(Strategy):
             if self.our_attacker.can_catch_ball(self.ball):
                 self.our_attacker.catcher = 'closed'
 		self.current_state = self.GRABBED
-                return grab_ball()
-            else:
-            	self.current_state = self.PREPARE
-                return do_nothing()
-
-
-class DefenderGrab(Strategy):
-
-    PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED = 'PREPARE', 'GO_TO_BALL', 'GRAB_BALL', 'GRABBED'
-    STATES = [PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED]
-    def __init__(self, world):
-        super(DefenderGrab, self).__init__(world, self.STATES)
-
-        self.NEXT_ACTION_MAP = {
-            self.PREPARE: self.prepare,
-            self.GO_TO_BALL: self.position,
-            self.GRAB_BALL: self.grab,
-            self.GRABBED: do_nothing
-        }
-
-        self.our_defender = self.world.our_defender
-        self.ball = self.world.ball
-
-    def prepare(self):
-        self.current_state = self.GO_TO_BALL
-        if self.our_defender.catcher == 'closed':
-            self.our_defender.catcher = 'open'
-	    print 'Defender grab opened catcher'
-            return open_catcher()
-        else:
-            return do_nothing()
-
-    def position(self):
-        displacement, angle = self.our_defender.get_direction_to_point(self.ball.x, self.ball.y)
-        if self.our_defender.can_catch_ball(self.ball):
-            self.current_state = self.GRAB_BALL
-            return do_nothing()
-        else:
-            return calculate_motor_speed(displacement, angle)
-
-    def grab(self):
-        if self.our_defender.has_ball(self.ball):
-            self.current_state = self.GRABBED
-            return do_nothing()
-        else:
-            if self.our_defender.can_catch_ball(self.ball):
-		print 'CAN CATCH NOW, GRAB!'
-                self.our_defender.catcher = 'closed'
                 return grab_ball()
             else:
             	self.current_state = self.PREPARE
@@ -527,11 +525,8 @@ class AttackerScore(Strategy):
 	"""
 	Rotate
 	"""
-	print 'Score strategy: rotate'
 
 	angle = self.our_attacker.get_rotation_to_point(self.world.their_goal.x, self.world.their_goal.y)
-
-        print 'Angle we are aiming for: %d during the shot!' % angle
 
 	if is_facing_target(angle):
             self.current_state = self.SHOOT
@@ -543,7 +538,6 @@ class AttackerScore(Strategy):
         """
         Kick.
         """
-	print 'Score strategy: shoot'
 
         self.current_state = self.FINISHED
         self.our_attacker.catcher = 'closed'
