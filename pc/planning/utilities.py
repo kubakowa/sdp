@@ -19,8 +19,6 @@ def is_shot_blocked(world, our_robot, their_robot):
         world, their_robot.x, our_robot, full_width=True, bounce=True)
     if predicted_y is None:
         return True
-    #print '##########', predicted_y, their_robot.y, their_robot.length
-    #print abs(predicted_y - their_robot.y) < their_robot.length
     return abs(predicted_y - their_robot.y) < their_robot.length
 
 
@@ -86,17 +84,27 @@ def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce
         else:
             return world.our_goal.y
 
+### Action
+# left motor - left motor speed
+# right motor - right motor speed
+# back motor - back motor speed
+# kicker - 1 for kick, 0 otherwise 
+# catcher - 1 for open, 2 for close, 0 otherwise
+# step - 1 for stepping enable, 0 otherwise
+# turn - 1 for turning, 0 otherwise
 
 def grab_ball():
-    return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 1, 'speed': 1000}
-
+    #return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 1, 'speed': 1000}
+    return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 2, 'step': 0, 'turn': 0}
 
 def kick_ball():
-    return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'speed': 1000}
+    #return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'speed': 1000}
+    return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 1, 'catcher': 0, 'step': 0, 'turn': 0}
 
 
 def open_catcher():
-    return {'left_motor': 0, 'right_motor': 0, 'kicker': 2, 'catcher': 0, 'speed': 1000}
+    #return {'left_motor': 0, 'right_motor': 0, 'kicker': 2, 'catcher': 0, 'speed': 1000}
+    return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 1, 'step': 0, 'turn': 0}
 
 
 def turn_shoot(orientation):
@@ -132,7 +140,8 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
             bb_speed=0 # this is if we are turning for a scoring shot
 
         if (displacement < DISTANCE_MATCH_THRESHOLD) and (abs(angle)<angle_thresh):
-            return {'left_motor': 50, 'right_motor': 50, 'kicker': 0, 'catcher': 0, 'speed': 0}
+	    #return {'left_motor': 50, 'right_motor': 50, 'kicker': 0, 'catcher': 0, 'speed': 0}
+	    return {'left_motor': 50, 'right_motor': 50, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 1, 'turn': 0}
         
         distThreshFast=70
         if displacement>distThreshFast:
@@ -159,8 +168,9 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 speed1=-angleTurnPower
                 speed2=angleTurnPower
 
-	    return {'left_motor': speed1, 'right_motor': speed2, 'back_motor':speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
-       
+	    #return {'left_motor': speed1, 'right_motor': speed2, 'back_motor':speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'bb_turn': 1}
+	    return {'left_motor': speed1, 'right_motor': speed2, 'back_motor': speed2, 'kicker': 0, 'catcher': 0, 'step': 1, 'turn': 1}
+
         else:
             #print('moving to ball')
             bb_speed = 1
@@ -168,11 +178,12 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 movePower=72
                 bb_speed=0
                 #print 'Carefully. DISP:', displacement
-                return {'left_motor': movePower, 'right_motor': movePower, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
+                #return {'left_motor': movePower, 'right_motor': movePower, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
+		return {'left_motor': movPower, 'right_motor': movePower, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0}
             #move forward
-	    return  {'left_motor': movePower, 'right_motor': movePower, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
-    else:
-        #print 'robot is at the ball'
+	    #return  {'left_motor': movePower, 'right_motor': movePower, 'back_motor': 0, 'kicker':0, 'catcher':0, 'speed': bb_speed}
+	    return {'left_motor': movPower, 'right_motor': movePower, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0}
+    else:	
         if abs(angle) > angle_thresh:
             #print 'turning to ball while next to it'
             #print('angle to ball', angle)
@@ -188,11 +199,12 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
                 speed1=-angleTurnPower;
                 speed2=angleTurnPower;
             #turning when robot is at the ball
-            return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': speed2, 'bb_turn':1}
-
+            #return {'left_motor': speed1, 'right_motor': speed2, 'kicker': 0, 'catcher': 0, 'speed': bb_speed, 'back_motor': speed2, 'bb_turn':1}
+	    return {'left_motor': speed1, 'right_motor': speed2, 'back_motor': speed2, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 1}
         else:
-            return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed, 'back_motor': 0}
-
+            #return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed, 'back_motor': 0}
+	    return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0}
+    
 def calculate_motor_speed_turn(displacement, angle, backwards_ok=False, careful=False):
     '''
     Simplistic view of calculating the speed: no modes or trying to be careful
@@ -251,7 +263,7 @@ def calculate_motor_speed_turn(displacement, angle, backwards_ok=False, careful=
     return do_nothing()
 
 def do_nothing():
-    return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': 0, 'stop': 0, 'spin': 0}
+    return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0}
 
 def adjust_angle(ang):
     speed = 50

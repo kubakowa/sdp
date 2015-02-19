@@ -952,8 +952,6 @@ class AttackerGrabCareful(Strategy):
         our_attacker = self.world.our_attacker
         ball = self.world.ball
 
-        #print 'BALL SIDE', self.ball_side
-
         distance, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
 
         if has_matched(our_attacker, angle=angle):
@@ -961,7 +959,6 @@ class AttackerGrabCareful(Strategy):
             return self.grab()
 
         motors = calculate_motor_speed(None, angle, careful=True)
-        #print 'MOTORS', motors
         return motors
 
 
