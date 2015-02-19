@@ -275,7 +275,7 @@ class Camera(object):
 
 class GUI(object):
 
-    VISION = 'SUCH VISION'
+    VISION = 'Good luck group 11'
     BG_SUB = 'BG Subtract'
     NORMALIZE = 'Normalize  '
     COMMS = 'Communications on/off '

@@ -9,8 +9,8 @@ class Planner:
 
     def __init__(self, our_side, pitch_num):
         self._world = World(our_side, pitch_num)
-        self._world.our_defender.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -5.5}
-        self._world.our_attacker.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -5.5}
+        self._world.our_defender.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -5}
+        self._world.our_attacker.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -5}
 
         # self._defender_defence_strat = DefenderDefence(self._world)
         # self._defender_attack_strat = DefaultDefenderAttack(self._world)
