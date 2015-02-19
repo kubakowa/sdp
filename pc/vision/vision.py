@@ -518,8 +518,8 @@ class GUI(object):
             frame, "Left Motor: " + str(action['left_motor']), x, y+5, color=BGR_COMMON['white'])
         self.draw_text(
             frame, "Right Motor: " + str(action['right_motor']), x, y+15, color=BGR_COMMON['white'])
-#	self.draw_text(
-#            frame, "Back Motor: " + str(action['back_motor']), x, y+25, color=BGR_COMMON['white'])
+	self.draw_text(
+            frame, "Back Motor: " + str(action['back_motor']), x, y+25, color=BGR_COMMON['white'])
 
-        self.draw_text(frame, "Kicker: " + str(action['kicker']), x, y + 35, color=BGR_COMMON['white'])
-        self.draw_text(frame, "Catcher: " + str(action['catcher']), x, y + 45, color=BGR_COMMON['white'])
+        self.draw_text(frame, "Kicker: " + str(action['kicker']), x, y + 45, color=BGR_COMMON['white'])
+        self.draw_text(frame, "Catcher: " + str(action['catcher']), x, y + 55, color=BGR_COMMON['white'])
