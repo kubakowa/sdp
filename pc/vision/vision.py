@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import cv2
 import tools
 from tracker import BallTracker, RobotTracker
@@ -463,9 +464,9 @@ class GUI(object):
 
             if velocity is not None:
                 self.draw_text(frame, 'velocity: %.2f' % velocity, draw_x, y_offset + 40)
-        if text == 'our_attacker':
-            self.draw_actions(frame, a_action, draw_x, y_offset+50)
-        elif text == 'our_defender':
+
+	# only show defender actions
+        if text == 'our_defender':
             self.draw_actions(frame, d_action, draw_x, y_offset+50)
 
     def draw_text(self, frame, text, x, y, color=BGR_COMMON['green'], thickness=1.3, size=0.3,):
@@ -517,7 +518,8 @@ class GUI(object):
             frame, "Left Motor: " + str(action['left_motor']), x, y+5, color=BGR_COMMON['white'])
         self.draw_text(
             frame, "Right Motor: " + str(action['right_motor']), x, y+15, color=BGR_COMMON['white'])
-        #self.draw_text(
-           # frame, "Speed: " + str(action['speed']), x, y + 25, color=BGR_COMMON['white'])
+#	self.draw_text(
+#            frame, "Back Motor: " + str(action['back_motor']), x, y+25, color=BGR_COMMON['white'])
+
         self.draw_text(frame, "Kicker: " + str(action['kicker']), x, y + 35, color=BGR_COMMON['white'])
         self.draw_text(frame, "Catcher: " + str(action['catcher']), x, y + 45, color=BGR_COMMON['white'])
