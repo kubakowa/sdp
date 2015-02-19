@@ -47,7 +47,6 @@ class Planner:
         their_attacker = self._world.their_attacker
         ball = self._world.ball
 
-
         # We have the ball in our zone, so we grab and pass:
 	if our_defender.catcher=='closed' and self._defender_state == 'pass':
 	   # Assumed we catched successfully

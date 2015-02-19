@@ -197,7 +197,7 @@ class Defender_Controller(Robot_Controller):
 	
 	command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
        
-        if (int (action['speed'])==0):
+        if (int (action['step'])==0):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
         
 	if self.wasTurning==1 and 'bb_turn' not in action:
@@ -234,29 +234,28 @@ class Defender_Controller(Robot_Controller):
                 pass
 
 #Commands we need to make sure get executed.
-        if volatile:
-
-	  def sendVolatileCommand(command):
-	      command=command[0:len(command)-1] #remove the \n at the end
-.	      command=command + ' ' + str(self.ackNo) + '\n'
-	      print 'sending', command
-	      while(True):
-		  comm.write(command)
-		  time.sleep(0.1)
-		  print 'resending', command
-
-	  t = threading.Timer(0.1, sendVolatileCommand, [command])
-	  t.start()
-	  while(True):
-	      acknowledgement=comm.readline()
-	      if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
-		  self.ackNo+=1
-		  t.cancel()  
-		  break
-	      if acknowledgement=="no comms":
-		  t.cancel()  
-		  break
-  
+#        if volatile:
+#
+#	  def sendVolatileCommand(command):
+#	      command=command[0:len(command)-1] #remove the \n at the end
+#	      #command=command + ' ' + str(self.ackNo) + '\n'
+#	      print 'sending', command
+#	      while(True):
+#		  comm.write(command)
+#		  time.sleep(0.1)
+#		  print 'resending', command
+#
+#	  t = threading.Timer(0.1, sendVolatileCommand, [command])
+#	  t.start()
+#	  while(True):
+#	      acknowledgement=comm.readline()
+#	      if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
+#		  self.ackNo+=1
+#		  t.cancel()  
+#		  break
+#	      if acknowledgement=="no comms":
+#		  t.cancel()  
+#		  break
 
         print command
         if not (command=="BB_MOVE 0 0 0\n" or command=="BB_STEP 0 0 0\n"):
