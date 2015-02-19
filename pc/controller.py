@@ -102,7 +102,7 @@ class Controller:
                 defender_actions = self.planner.plan('defender')
 
                 #if self.attacker is not None:
-                #    self.attacker.execute(self.arduino, attacker_actions)
+                 #   self.attacker.execute(self.arduino, attacker_actions)
                 if self.defender is not None:
                    self.defender.execute(self.arduino, defender_actions)
 
@@ -319,13 +319,15 @@ class Attacker_Controller(Robot_Controller):
 
             if command=='BB_KICK\n':
                comm.write('BB_CLOSE\n')
-               time.sleep(0.5) 
+               time.sleep(0.8) 
                comm.write('BB_CLOSE\n')
-               time.sleep(0.5) 
+               time.sleep(0.8) 
 	    comm.write(command)
-            time.sleep(0.5)
+            time.sleep(0.8)
             comm.write(command)
-            time.sleep(0.5)
+            time.sleep(0.8)
+            comm.write(command)
+            time.sleep(0.8)
             comm.write(command)
 
         print command
