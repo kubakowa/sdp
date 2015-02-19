@@ -9,6 +9,7 @@ import cv2
 import serial
 import warnings
 import time
+import threading
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -159,7 +160,15 @@ class Defender_Controller(Robot_Controller):
     """
     Defender implementation.
     """
+
+    acknowledgements={"BB_OPEN\n":"BB_OPENED ",
+		      "BB_CLOSE\n":"BB_CLOSED ",
+		      "BB_KICK\n":"BB_KICKED ", 
+		      "BB_STOP\n":"BB_STOPPED "
+		      }
+
     wasTurning=0
+    ackNo=0
     def __init__(self):
         """
         Do the same setup as the Robot class, as well as anything specific to the Defender.
@@ -192,9 +201,11 @@ class Defender_Controller(Robot_Controller):
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
         
 	if self.wasTurning==1 and 'bb_turn' not in action:
+            #print 'stopping back motor'
             comm.write('BB_STOP\n')
 
 	if 'stop' in action and int(action['stop']) == 1:
+	    print 'Stopping'
 	    comm.write('BB_STOP\n')
 	
 	if 'bb_turn' in action:
@@ -222,27 +233,39 @@ class Defender_Controller(Robot_Controller):
             except StandardError:
                 pass
 
+#Commands we need to make sure get executed.
         if volatile:
-            if command=='BB_KICK\n':
-               comm.write('\nBB_CLOSE\n')
-               time.sleep(0.8) 
-               comm.write('\nBB_CLOSE\n')
-               time.sleep(0.8) 
-	    comm.write(command)
-            time.sleep(0.8)
-            comm.write(command)
-            time.sleep(0.8)
-            comm.write(command)
-            time.sleep(0.8)
-            comm.write(command)
+
+	  def sendVolatileCommand(command):
+	      command=command[0:len(command)-1] #remove the \n at the end
+.	      command=command + ' ' + str(self.ackNo) + '\n'
+	      print 'sending', command
+	      while(True):
+		  comm.write(command)
+		  time.sleep(0.1)
+		  print 'resending', command
+
+	  t = threading.Timer(0.1, sendVolatileCommand, [command])
+	  t.start()
+	  while(True):
+	      acknowledgement=comm.readline()
+	      if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
+		  self.ackNo+=1
+		  t.cancel()  
+		  break
+	      if acknowledgement=="no comms":
+		  t.cancel()  
+		  break
+  
 
         print command
         if not (command=="BB_MOVE 0 0 0\n" or command=="BB_STEP 0 0 0\n"):
             comm.write(command)
             was_moving=1
 	else:
+            print 'Empty command, not sending it'
             if (was_moving==1):
-                comm.write("BB_STOP\n")
+                comm.write("BB_STOP")
                 was_moving=0
 
     def shutdown(self, comm):
@@ -279,6 +302,14 @@ class Arduino:
     def write(self, string):
         if self.comms == 1:
             self.serial.write(string)
+
+    def readline(self):
+        if self.comms == 1:
+	    received=self.serial.readline()
+	    print "while waiting for ACK, received", received
+            return received
+	else:
+	    return "no comms"
 
 
 if __name__ == '__main__':

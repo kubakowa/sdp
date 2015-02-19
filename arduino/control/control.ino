@@ -116,7 +116,7 @@ void make_kick() {
   motorBackward(KICK_MOTOR, MAX_SPEED);
   delay(KICK_TIME);
   motorStop(KICK_MOTOR);
-  Serial.print("BB_KICKED");
+  Serial.print("BB_KICKED \n");
 }
 
 void open_grabber() {
@@ -130,7 +130,7 @@ void open_grabber() {
   
   /* Assign state of the grabber */
   GRABBER_OPEN = 1;
-  Serial.print("BB_OPENED");
+  Serial.print("BB_OPENED \n");
 }
 
 void close_grabber() {
@@ -141,7 +141,7 @@ void close_grabber() {
   
   /* Assign state of the grabber */
   GRABBER_OPEN = 0;
-  Serial.print("BB_CLOSED");
+  Serial.print("BB_CLOSED \n");
 }
 
 void make_pause() {
@@ -155,7 +155,7 @@ void make_stop() {
   motorStop(BACK_MOTOR);
   motorStop(LEFT_MOTOR); 
   motorStop(RIGHT_MOTOR);
-  Serial.print("BB_STOPPED");
+  Serial.print("BB_STOPPED \n");
 }
 
 void invalid_command(const char* command) { }
