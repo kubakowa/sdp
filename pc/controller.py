@@ -92,7 +92,6 @@ class Controller:
                 # Find object positions
                 # model_positions have their y coordinate inverted
 
-
 		#find positions of objects in current preprocessed frame
                 model_positions, regular_positions = self.vision.locate(frame)
                 model_positions = self.postprocessing.analyze(model_positions)
@@ -167,7 +166,9 @@ class Defender_Controller(Robot_Controller):
 		      "BB_STOP\n":"BB_STOPPED "
 		      }
 
-    wasTurning=0
+    is_turning = 0
+    is_moving = 0
+
     ackNo=0
     def __init__(self):
         """
@@ -181,58 +182,72 @@ class Defender_Controller(Robot_Controller):
         """
         print action
 
+	# action details
         left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
-	back_motor = 0
+	back_motor = int(action['back_motor'])
+	kicker = int(action['kicker'])
+	catcher = int(action['catcher'])
+	turn = int(action['turn'])
+	step = int(action['step'])
+	stop = int(action['stop'])
+	
+	# kick, open and close are volatile commands
 	volatile = 0
-        was_moving= 0
         
-	if left_motor==-right_motor:
-	  # turning
-	  if 'bb_turn' in action:
-	    back_motor=right_motor
-	  # going sideways
-	  else:
-	    back_motor=-1.4*right_motor
+	#if left_motor==-right_motor:
+	#  # turning
+	#  if 'bb_turn' in action:
+	#    back_motor=right_motor
+	#  # going sideways
+	#  else:
+	#    back_motor=-1.4*right_motor
 	
 	command = 'BB_MOVE %d %d %d\n' % (left_motor, right_motor, back_motor)
        
-        if (int (action['step'])==0):
+        if step == 1:
             command = 'BB_STEP %d %d %d\n' % (left_motor, right_motor, back_motor)
         
-	if self.wasTurning==1 and 'bb_turn' not in action:
-            #print 'stopping back motor'
+	# if turning and current action does not involve turning, stop robot before proceeding
+	if self.is_turning == 1 and turn == 0:
             comm.write('BB_STOP\n')
 
-	if 'stop' in action and int(action['stop']) == 1:
-	    print 'Stopping'
+	if stop == 1:
 	    comm.write('BB_STOP\n')
+	    self.is_moving = 0
 	
-	if 'bb_turn' in action:
-            self.wasTurning=1
+	if turn == 1:
+            self.is_turning = 1
         else:
-            self.wasTurning=0
+            self.is_turning = 0
 
-        if action['kicker'] == 1:
+        if kicker == 1:
             try:
-                volatile=1
-                command='BB_KICK\n'
+                volatile = 1
+                command = 'BB_KICK\n'
             except StandardError:
                 pass
-        elif  action['kicker'] == 2:
+        elif catcher == 1:
             try:
-                volatile=1
-                command ='BB_OPEN\n'
+                volatile = 1
+                command = 'BB_OPEN\n'
             except StandardError:
                 pass
             
-        elif action['catcher'] != 0:
+        elif catcher == 2:
             try:
-                volatile=1
-                command='BB_CLOSE\n'
+                volatile = 1
+                command = 'BB_CLOSE\n'
             except StandardError:
                 pass
 
+	if volatile:
+	    comm.write(command)
+	    time.sleep(0.1)
+	    comm.write(command)
+	    time.sleep(0.1)
+	    comm.write(command)
+	
 #Commands we need to make sure get executed.
 #        if volatile:
 #
@@ -258,14 +273,16 @@ class Defender_Controller(Robot_Controller):
 #		  break
 
         print command
+
+	# assuming this is only for movement commands
         if not (command=="BB_MOVE 0 0 0\n" or command=="BB_STEP 0 0 0\n"):
             comm.write(command)
-            was_moving=1
+            self.is_moving = 1
 	else:
             print 'Empty command, not sending it'
-            if (was_moving==1):
-                comm.write("BB_STOP")
-                was_moving=0
+            if self.is_moving == 1:
+                comm.write("BB_STOP\n")
+                self.is_moving = 0
 
     def shutdown(self, comm):
         comm.write('BB_STOP\n')
@@ -293,9 +310,9 @@ class Arduino:
                     #raise
         else:
             #self.write('A_RUN_KICK\n')
-            self.write('A_RUN_ENGINE %d %d\n' % (0, 0))
+            #self.write('A_RUN_ENGINE %d %d\n' % (0, 0))
             #self.write('D_RUN_KICK\n')
-            self.write('D_RUN_ENGINE %d %d\n' % (0, 0))
+            #self.write('D_RUN_ENGINE %d %d\n' % (0, 0))
             self.comms = 0
 
     def write(self, string):

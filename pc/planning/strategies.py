@@ -209,24 +209,19 @@ class DefenderPass(Strategy):
 	"""
 	Rotate
 	"""
-	print 'Score strategy: rotate'
 
 	angle = self.our_defender.get_rotation_to_point(self.world.their_goal.x, self.world.their_goal.y)
-
-        print 'Angle we are aiming for: %d during the shot!' % angle
 
 	if is_facing_target(angle):
             self.current_state = self.SHOOT
             return do_nothing()
         else:
-            return calculate_motor_speed(-1, angle)
+            return calculate_motor_speed(None, angle)
 
     def shoot(self):
         """
         Kick.
         """
-	print 'Kick strategy: shoot'
-
         self.current_state = self.FINISHED
         self.our_defender.catcher = 'closed'
         return kick_ball()
@@ -263,15 +258,16 @@ class DefenderGrab(Strategy):
         self.our_defender = self.world.our_defender
         self.ball = self.world.ball
 
+    # make sure the grabber is open
     def prepare(self):
         self.current_state = self.GO_TO_BALL
         if self.our_defender.catcher == 'closed':
             self.our_defender.catcher = 'open'
-	    print 'Defender grab opened catcher'
             return open_catcher()
         else:
             return do_nothing()
 
+    # move towards the ball until it is possible to catch it
     def position(self):
         displacement, angle = self.our_defender.get_direction_to_point(self.ball.x, self.ball.y)
         if self.our_defender.can_catch_ball(self.ball):
@@ -280,18 +276,58 @@ class DefenderGrab(Strategy):
         else:
             return calculate_motor_speed(displacement, angle)
 
+    # grab the ball
     def grab(self):
         if self.our_defender.has_ball(self.ball):
             self.current_state = self.GRABBED
             return do_nothing()
         else:
             if self.our_defender.can_catch_ball(self.ball):
-		print 'CAN CATCH NOW, GRAB!'
                 self.our_defender.catcher = 'closed'
                 return grab_ball()
             else:
             	self.current_state = self.PREPARE
                 return do_nothing()
+
+# strategy only necessery for the third milestone - in real game attacker unlikely to pass the ball to us
+class DefenderPositionForPass(Strategy):
+
+    POSITION, PREPARE, READY = 'POSITION', 'PREPARE', 'READY' 
+    STATES = [POSITION, PREPARE, READY]
+    def __init__(self, world):
+        super(DefenderPositionForPass, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+	    self.POSITION: self.position,
+            self.PREPARE: self.prepare,
+	    self.READY: self.ready
+        }
+
+        self.our_defender = self.world.our_defender
+	self.our_attacker = self.world.our_attacker
+        self.ball = self.world.ball
+
+
+    # give option for a pass
+    def position(self):
+        # TODO: position 
+	self.current_state = self.POSITION
+	return do_nothing();
+
+
+    # make sure the grabber is open
+    def prepare(self):
+        self.current_state = self.READY
+        if self.our_defender.catcher == 'closed':
+            self.our_defender.catcher = 'open'
+            return open_catcher()
+        else:
+            return do_nothing()
+
+    # wait for the pass
+    def ready(self):
+      return do_nothing();
+       
 
 ###########################################################################
 # END OF DEFENDER STRATEGIES

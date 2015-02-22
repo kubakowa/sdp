@@ -11,12 +11,15 @@ class Planner:
         self._world.our_defender.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -5}
         self._world.our_attacker.catcher_area = {'width' : 35, 'height' : 30, 'front_offset' : -5}
 
-        self._defender_strategies = {'defence' : [DefenderPenalty],
-                                     'grab'    : [DefenderGrab],
-                                     'pass'    : [DefenderPass]}
+        self._defender_strategies = {'defence'  : [DefenderPenalty],
+                                     'grab'     : [DefenderGrab],
+                                     'pass'     : [DefenderPass],
+				     'position' : [DefenderPositionForPass]}
 
         self._defender_state = 'defence'
         self._defender_current_strategy = self.choose_defender_strategy(self._world)
+	
+	generate_speed_coeff_matrix()
 
     # Choose the first strategy in the applicable list.
     def choose_defender_strategy(self, world):
@@ -46,37 +49,40 @@ class Planner:
         their_defender = self._world.their_defender
         their_attacker = self._world.their_attacker
         ball = self._world.ball
-
-        # We have the ball in our zone, so we grab and pass:
-	if our_defender.catcher=='closed' and self._defender_state == 'pass':
-	   # Assumed we catched successfully
-	   return self._defender_current_strategy.generate()
-
-	if self._defender_current_strategy.current_state == 'GRABBED':
-	   self._defender_state = 'pass'
-	   self._defender_current_strategy = self.choose_defender_strategy(self._world)
-           return self._defender_current_strategy.generate()
-
-        if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and ball.velocity < BALL_VELOCITY:
-           # Check if we should switch from a grabbing to a scoring strategy.
+	
+	# Ball in our zone and not moving fast, so can proceed with grabbing
+	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y): 
+	    #and ball.velocity < BALL_VELOCITY:
+           
+	   # If we grabbed, switch from grabbing to passing
            if self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
 	      self._defender_state = 'pass'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
-            # Check if we should switch from a defence to a grabbing strategy.
+           # Switch from defence to grabbing
            elif self._defender_state == 'defence':
 	      self._defender_state = 'grab'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
+	   # If pass finished, switch to grabbing 
            elif self._defender_state == 'pass' and self._defender_current_strategy.current_state == 'FINISHED':
               self._defender_state = 'grab'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
 	   return self._defender_current_strategy.generate()
-	    
-	 # Otherwise, we need to defend:
+
+	# Ball in our attacker's zone, need to give them option for a pass
+	# problem that after a pass, ball crosses their attacker's zone so we would switch to defence strategy, but this can
+	# be disabled for the milestone (in real game backwards pass unlikely)
+	elif self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y):
+	   if not self._defender_state == 'position': 
+	      self._defender_state = 'position' 
+	      self._defender_current_strategy = self.choose_defender_strategy(self._world)
+
+	   return self._defender_current_strategy.generate()
+    
+	# Otherwise, we need to defend as the opposite side have the ball
         else:
-	    # If the bal is not in the defender's zone, the state should always be 'defend'.
            if not self._defender_state == 'defence':
 	      self._defender_state = 'defence'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
