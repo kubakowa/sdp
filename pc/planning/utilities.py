@@ -6,7 +6,9 @@ import numpy as np
 
 DISTANCE_MATCH_THRESHOLD = 30
 DISTANCE_ALMOST_THERSHOLD = 60
-ANGLE_MATCH_THRESHOLD = pi/11
+
+ANGLE_MATCH_THRESHOLD = pi/12
+
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
@@ -92,7 +94,7 @@ def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce
         else:
             return world.our_goal.y
 
-### Action
+### Actionhttp://www.inf.ed.ac.uk/teaching/courses/ct/coursework.html
 # left motor - left motor speed
 # right motor - right motor speed
 # back motor - back motor speed
@@ -127,8 +129,59 @@ def has_matched(robot, x=None, y=None, angle=None,
         angle_matched = abs(angle) < angle_threshold
     return dist_matched and angle_matched
 
+
+def calculate_motor_speed(displacement, angle):
+    # need to adjust the angle
+    if abs(angle) > ANGLE_MATCH_THRESHOLD:
+	if abs(angle) > pi:  
+	   factor = 0.6
+	elif abs(angle) > pi/2:
+	   factor = 0.5
+	else:
+	   factor = 0.4
+  
+	x = 0
+	y = 0
+	# need to turn clockwise
+	if angle < 0:
+	    w = -1
+	# need to turn anticlockwise
+	elif angle > 0:
+	    w = 1
+
+	speeds = get_speeds_vector(x, y, w, factor)
+
+	left_motor = speeds['left_motor']
+	right_motor = speeds['right_motor'] 
+	back_motor = speeds['back_motor']
+	
+	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 1, 'stop': 0}
+    # need to adjust distance
+    elif (displacement is not None and displacement > DISTANCE_MATCH_THRESHOLD):
+	if displacement > 4 * DISTANCE_MATCH_THRESHOLD:  
+	   factor = 1
+	elif displacement > 3 * DISTANCE_MATCH_THRESHOLD:
+	   factor = 0.8
+	elif displacement > 2 * DISTANCE_MATCH_THRESHOLD:
+	   factor = 0.7
+	else:
+	   factor = 0.6
+  
+	x = 0
+	y = 1
+	w = 0
+
+	speeds = get_speeds_vector(x, y, w, factor)
+
+	left_motor = speeds['left_motor']
+	right_motor = speeds['right_motor'] 
+	
+	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0}
+    else:
+	return do_nothing()
+
 # still need to refactor and simplify this function
-def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False):
+def calculate_motor_speed_old(displacement, angle, backwards_ok=False, careful=False):
     '''
     Simplistic view of calculating the speed: no modes or trying to be careful
     '''
@@ -141,7 +194,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
 
         if (displacement < DISTANCE_MATCH_THRESHOLD) and (abs(angle) < angle_thresh):
 	    # forward, no turning
-	    motor_speeds = calc_motor_speed(0, 1, 0)
+	    motor_speeds = get_speeds_vector(0, 1, 0)
 	    speed_factor = 0.5
 
 	    left_motor = motor_speeds['left_motor'] * speed_factor
@@ -291,7 +344,8 @@ def generate_speed_coeff_matrix():
     
     SPEED_COEFF_MATRIX = np.linalg.inv(SPEED_COEFF_MATRIX)
 
-def calc_motor_speeds(x, y, w):
+def get_speeds_vector(x, y, w, factor):
     coeffs = SPEED_COEFF_MATRIX * np.matrix([[-x], [y], [w]])
     coeffs = coeffs * 100 / max(abs(coeffs))
+    coeffs = coeffs * factor
     return {'left_motor': round(coeffs.item(0)), 'right_motor': round(coeffs.item(1)), 'back_motor': round(coeffs.item(2))}

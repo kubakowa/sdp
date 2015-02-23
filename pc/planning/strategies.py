@@ -201,6 +201,7 @@ class DefenderPass(Strategy):
         }
 
         self.our_defender = self.world.our_defender
+	self.our_attacker = self.world.our_attacker
 
         # Find the position to shoot from and cache it
         self.shooting_pos = self._get_shooting_coordinates(self.our_defender)
@@ -210,11 +211,11 @@ class DefenderPass(Strategy):
 	Rotate
 	"""
 
-	angle = self.our_defender.get_rotation_to_point(self.world.their_goal.x, self.world.their_goal.y)
+	angle = self.our_defender.get_rotation_to_point(self.our_attacker.x, self.our_attacker.y)
 
 	if is_facing_target(angle):
             self.current_state = self.SHOOT
-            return do_nothing()
+            return grab_ball()
         else:
             return calculate_motor_speed(None, angle)
 

@@ -243,9 +243,11 @@ class Defender_Controller(Robot_Controller):
 
 	if volatile:
 	    comm.write(command)
-	    time.sleep(0.1)
+	    time.sleep(0.2)
 	    comm.write(command)
-	    time.sleep(0.1)
+	    time.sleep(0.2)
+	    comm.write(command)
+	    time.sleep(0.2)
 	    comm.write(command)
 	
 #Commands we need to make sure get executed.
