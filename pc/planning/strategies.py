@@ -54,7 +54,6 @@ class DefenderPenalty(Strategy):
         self.current_state = self.DEFEND_GOAL
         if self.our_defender.catcher == 'closed':
             self.our_defender.catcher = 'open'
-            print 'Defender penalty opened catcher'
 	    return open_catcher()
         else:
             return do_nothing()
@@ -66,19 +65,15 @@ class DefenderPenalty(Strategy):
         # Predict where they are aiming.
 	if self.ball.velocity <= BALL_VELOCITY: 
             predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=False)
-	    print 'Ball is not moving (velocity %d), predicted y is %d, robot is at %d' % (self.ball.velocity, predicted_y, self.our_defender.y)
             return do_nothing()
 
 	# Predict where the ball is moving and try to block it.
         elif self.ball.velocity > BALL_VELOCITY:
-	    print 'Ball is moving, try to block it!'
             predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=False)
 
             if (is_aligned(predicted_y, self.our_defender.y)):
-		print 'Robot in position, waiting for the ball'
                 return defender_stop();
 	    else:
-		print 'Robot not in position yet, moving towards'
             	return adjust_y_position(self.our_defender, predicted_y, self.world._our_side)
 	   
 class DefenderDefend(Strategy):
@@ -134,8 +129,6 @@ class DefenderDefend(Strategy):
         """
         Align yourself to the middle of the goal.
         """
-	#print 'Robot y: %d, Goal centre: %d' % (self.our_defender.y, self.our_goal.y)
-
 	if not is_aligned(self.our_defender.y, self.our_goal.y):
             return adjust_y_position(self.our_defender, self.our_goal.y, self.world._our_side)
 	elif not is_facing_target(self.our_defender.get_rotation_to_point(self.their_goal.x, self.their_goal.y)):
@@ -262,11 +255,8 @@ class DefenderGrab(Strategy):
     # make sure the grabber is open
     def prepare(self):
         self.current_state = self.GO_TO_BALL
-        if self.our_defender.catcher == 'closed':
-            self.our_defender.catcher = 'open'
-            return open_catcher()
-        else:
-            return do_nothing()
+        self.our_defender.catcher = 'open'
+        return open_catcher()
 
     # move towards the ball until it is possible to catch it
     def position(self):

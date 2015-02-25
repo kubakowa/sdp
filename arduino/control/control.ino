@@ -152,7 +152,9 @@ void make_pause() {
 }
 
 void make_stop() {
-  motorAllStop();
+  motorStop(BACK_MOTOR);
+  motorStop(LEFT_MOTOR); 
+  motorStop(RIGHT_MOTOR);
   Serial.print("BB_STOPPED \n");
 }
 

@@ -217,7 +217,8 @@ class Robot(PitchObject):
         '''
         Get if the ball is in the catcher zone but may not have possession
         '''
-        return self.catcher_area.isInside(ball.x, ball.y) or (ball.x==35 and ball.y==174)
+        return self.catcher_area.isInside(ball.x, ball.y) 
+	  #or (ball.x==35 and ball.y==174)
 
     def has_ball(self, ball):
         '''

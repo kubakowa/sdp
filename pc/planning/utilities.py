@@ -129,17 +129,13 @@ def has_matched(robot, x=None, y=None, angle=None,
         angle_matched = abs(angle) < angle_threshold
     return dist_matched and angle_matched
 
-
 def calculate_motor_speed(displacement, angle):
     # need to adjust the angle
     if abs(angle) > ANGLE_MATCH_THRESHOLD:
 	if abs(angle) > pi:  
 	   factor = 0.6
-	elif abs(angle) > pi/2:
-	   factor = 0.5
 	else:
 	   factor = 0.4
-  
 	x = 0
 	y = 0
 	# need to turn clockwise
@@ -150,30 +146,28 @@ def calculate_motor_speed(displacement, angle):
 	    w = 1
 
 	speeds = get_speeds_vector(x, y, w, factor)
-
 	left_motor = speeds['left_motor']
 	right_motor = speeds['right_motor'] 
 	back_motor = speeds['back_motor']
 	
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 1, 'stop': 0}
     # need to adjust distance
-    elif (displacement is not None and displacement > DISTANCE_MATCH_THRESHOLD):
+
+    if (displacement is not None and displacement > DISTANCE_MATCH_THRESHOLD):
 	if displacement > 4 * DISTANCE_MATCH_THRESHOLD:  
-	   factor = 1
+	   factor = 0.70
 	elif displacement > 3 * DISTANCE_MATCH_THRESHOLD:
-	   factor = 0.8
-	elif displacement > 2 * DISTANCE_MATCH_THRESHOLD:
-	   factor = 0.7
+	   factor = 0.65
 	else:
 	   factor = 0.6
   
 	x = 0
 	y = 1
 	w = 0
-
+	
 	speeds = get_speeds_vector(x, y, w, factor)
 
-	left_motor = speeds['left_motor']
+	left_motor = 1.2 * speeds['left_motor']
 	right_motor = speeds['right_motor'] 
 	
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0}
