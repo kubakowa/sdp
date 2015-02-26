@@ -10,6 +10,7 @@
 
 /* State */
 int GRABBER_OPEN = 0;
+int ackNo = 0;
 
 /* Constants */
 int KICK_TIME = 400;
@@ -23,10 +24,10 @@ SerialCommand comm;
 
 void setupCommands() {
   comm.addCommand("BB_MOVE", make_move);
-  comm.addCommand("BB_KICK", make_kick);
-  comm.addCommand("BB_OPEN", open_grabber);
-  comm.addCommand("BB_CLOSE", close_grabber);
-  comm.addCommand("BB_STOP", make_stop);
+  comm.addCommand("BB_KICK", make_volatile("BB_KICKED"));
+  comm.addCommand("BB_OPEN", make_volatile("BB_OPENED"));
+  comm.addCommand("BB_CLOSE", make_volatile("BB_CLOSED"));
+  comm.addCommand("BB_STOP", make_volatile("BB_STOPPED"));
   comm.addCommand("BB_PAUSE", make_pause);
   comm.addCommand("BB_STEP", make_incremental_move);
 } 
@@ -65,8 +66,7 @@ void burst_move(int left_speed,int right_speed, int back_speed) {
 void make_incremental_move() {
   char *left_m;
   char *right_m;
-  char *back_m;
-  
+  char *back_m; 
   int left_speed;
   int right_speed;
   int back_speed;
@@ -108,15 +108,46 @@ void make_move() {
   burst_move(left_speed, right_speed, back_speed);
 }
 
-void make_kick() {
+// Volatile Commands
+void make_volatile(char* command){
+  // Get broadcast acknowledgement number 
+  int ack_number_pc;
+  ack_number_pc = comm.next();
   
+  // Check for duplicates - commands received in the past
+  if (ack_number_pc != ackNo){
+    // Send the acknowledgement again
+    Serial.print(command + " " + ack_number_pc + "\n");
+  }
+  
+  // If fresh, carry out command and send acknowledgement
+  else {
+    if (command == "BB_KICKED"){
+      make_kick();
+    }
+    if (command == "BB_OPENED"){
+      open_grabber();
+    }
+    if (command == "BB_CLOSED"){
+      close_grabber();
+    }
+    if (command == "BB_STOPPED"){
+      make_stop();
+    }
+  
+    // Send acknowledgement
+    Serial.print(command + " " + ackNo + "\n");
+    ackNo++;
+  }
+}
+
+void make_kick() { 
   if (GRABBER_OPEN)
     return;
   
   motorBackward(KICK_MOTOR, MAX_SPEED);
   delay(KICK_TIME);
   motorStop(KICK_MOTOR);
-  Serial.print("BB_KICKED \n");
 }
 
 void open_grabber() {
