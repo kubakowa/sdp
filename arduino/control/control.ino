@@ -24,10 +24,10 @@ SerialCommand comm;
 
 void setupCommands() {
   comm.addCommand("BB_MOVE", make_move);
-  comm.addCommand("BB_KICK", make_volatile("BB_KICKED"));
-  comm.addCommand("BB_OPEN", make_volatile("BB_OPENED"));
-  comm.addCommand("BB_CLOSE", make_volatile("BB_CLOSED"));
-  comm.addCommand("BB_STOP", make_volatile("BB_STOPPED"));
+  comm.addCommand("BB_KICK", make_kick;
+  comm.addCommand("BB_OPEN", open_grabber);
+  comm.addCommand("BB_CLOSE", close_grabber);
+  comm.addCommand("BB_STOP", make_stop);
   comm.addCommand("BB_PAUSE", make_pause);
   comm.addCommand("BB_STEP", make_incremental_move);
 } 
@@ -109,7 +109,7 @@ void make_move() {
 }
 
 // Volatile Commands
-void make_volatile(char* command){
+bool verify_command(char* command){
   // Get broadcast acknowledgement number 
   int ack_number_pc;
   ack_number_pc = comm.next();
@@ -118,61 +118,64 @@ void make_volatile(char* command){
   if (ack_number_pc != ackNo){
     // Send the acknowledgement again
     Serial.print(command + " " + ack_number_pc + "\n");
+    return false;
   }
   
-  // If fresh, carry out command and send acknowledgement
+  // If fresh, verify
   else {
-    if (command == "BB_KICKED"){
-      make_kick();
-    }
-    if (command == "BB_OPENED"){
-      open_grabber();
-    }
-    if (command == "BB_CLOSED"){
-      close_grabber();
-    }
-    if (command == "BB_STOPPED"){
-      make_stop();
-    }
-  
-    // Send acknowledgement
+    return true; 
+  }
+}
+
+void send_ack(char* command){
+// Send acknowledgement
     Serial.print(command + " " + ackNo + "\n");
     ackNo++;
-  }
 }
 
 void make_kick() { 
-  if (GRABBER_OPEN)
-    return;
-  
-  motorBackward(KICK_MOTOR, MAX_SPEED);
-  delay(KICK_TIME);
-  motorStop(KICK_MOTOR);
+  if(verify_command("BB_KICKED")){
+    if (GRABBER_OPEN)
+      return;
+    
+    motorBackward(KICK_MOTOR, MAX_SPEED);
+    delay(KICK_TIME);
+    motorStop(KICK_MOTOR);
+
+    send_ack("BB_KICKED");
+  }
 }
 
 void open_grabber() {
-  
-  if (GRABBER_OPEN)
-    return;
-  
-  motorBackward(KICK_MOTOR, MAX_SPEED);
-  delay(GRAB_TIME);
-  motorBackward(KICK_MOTOR, OPEN_SPEED);
-  
-  /* Assign state of the grabber */
-  GRABBER_OPEN = 1;
-  Serial.print("BB_OPENED \n");
+  if(verify_command("BB_OPENED"){ 
+    if (GRABBER_OPEN)
+      return;
+    
+    motorBackward(KICK_MOTOR, MAX_SPEED);
+    delay(GRAB_TIME);
+    motorBackward(KICK_MOTOR, OPEN_SPEED);
+    
+    /* Assign state of the grabber */
+    GRABBER_OPEN = 1;
+    Serial.print("BB_OPENED \n");
+
+    send_ack("BB_OPENED");
+  }
 }
 
 void close_grabber() {
-  motorStop(KICK_MOTOR);
-  motorForward(KICK_MOTOR, MAX_SPEED);
-  delay(CLOSE_TIME);
-  motorStop(KICK_MOTOR);
-  
-  /* Assign state of the grabber */
-  GRABBER_OPEN = 0;
-  Serial.print("BB_CLOSED \n");
+  if(verify_command("BB_CLOSED")){
+    motorStop(KICK_MOTOR);
+    motorForward(KICK_MOTOR, MAX_SPEED);
+    delay(CLOSE_TIME);
+    motorStop(KICK_MOTOR);
+    
+    /* Assign state of the grabber */
+    GRABBER_OPEN = 0;
+    Serial.print("BB_CLOSED \n");
+
+    send_ack("BB_CLOSED");
+  } 
 }
 
 void make_pause() {
@@ -183,10 +186,14 @@ void make_pause() {
 }
 
 void make_stop() {
-  motorStop(BACK_MOTOR);
-  motorStop(LEFT_MOTOR); 
-  motorStop(RIGHT_MOTOR);
-  Serial.print("BB_STOPPED \n");
+  if(verify_command("BB_STOPPED")){
+    motorStop(BACK_MOTOR);
+    motorStop(LEFT_MOTOR); 
+    motorStop(RIGHT_MOTOR);
+    Serial.print("BB_STOPPED \n");
+
+    send_ack("BB_STOPPED");
+  }
 }
 
 void invalid_command(const char* command) { }
