@@ -30,6 +30,7 @@ void setupCommands() {
   comm.addCommand("BB_STOP", make_stop);
   comm.addCommand("BB_PAUSE", make_pause);
   comm.addCommand("BB_STEP", make_incremental_move);
+  comm.addCommand("BB_FLUSH", make_flush);
 } 
 
 void setup(){
@@ -110,7 +111,9 @@ void make_move() {
 
 // Volatile Commands
 bool verify_command(char* command){
-  // Get broadcast acknowledgement number 
+  // Get broadcast acknowledgement number
+  
+  
   int ack_number_pc;
   ack_number_pc = atoi(comm.next());
   
@@ -138,9 +141,13 @@ void send_ack(char* command){
     ack += " ";
     ack += ackNo;
     ack += "\n";
-    
+   Serial.print("hello this is a message that you shouldn't corrupted\n"); 
    Serial.print(ack);
    ackNo++;
+}
+
+void make_flush(){
+  Serial.flush();
 }
 
 void make_kick() { 
@@ -168,8 +175,6 @@ void open_grabber() {
     
     /* Assign state of the grabber */
     GRABBER_OPEN = 1;
-    Serial.print("BB_OPENED \n");
-
     send_ack("BB_OPENED");
   }
 }
@@ -183,8 +188,6 @@ void close_grabber() {
     
     /* Assign state of the grabber */
     GRABBER_OPEN = 0;
-    Serial.print("BB_CLOSED \n");
-
     send_ack("BB_CLOSED");
   } 
 }
@@ -201,8 +204,6 @@ void make_stop() {
     motorStop(BACK_MOTOR);
     motorStop(LEFT_MOTOR); 
     motorStop(RIGHT_MOTOR);
-    Serial.print("BB_STOPPED \n");
-
     send_ack("BB_STOPPED");
   }
 }
