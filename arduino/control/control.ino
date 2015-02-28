@@ -24,7 +24,7 @@ SerialCommand comm;
 
 void setupCommands() {
   comm.addCommand("BB_MOVE", make_move);
-  comm.addCommand("BB_KICK", make_kick;
+  comm.addCommand("BB_KICK", make_kick);
   comm.addCommand("BB_OPEN", open_grabber);
   comm.addCommand("BB_CLOSE", close_grabber);
   comm.addCommand("BB_STOP", make_stop);
@@ -112,12 +112,17 @@ void make_move() {
 bool verify_command(char* command){
   // Get broadcast acknowledgement number 
   int ack_number_pc;
-  ack_number_pc = comm.next();
+  ack_number_pc = atoi(comm.next());
   
   // Check for duplicates - commands received in the past
   if (ack_number_pc != ackNo){
     // Send the acknowledgement again
-    Serial.print(command + " " + ack_number_pc + "\n");
+    String ack = command;
+    ack += " ";
+    ack += ack_number_pc;
+    ack += "\n";
+    
+    Serial.print(ack);
     return false;
   }
   
@@ -128,9 +133,14 @@ bool verify_command(char* command){
 }
 
 void send_ack(char* command){
-// Send acknowledgement
-    Serial.print(command + " " + ackNo + "\n");
-    ackNo++;
+   // Send acknowledgement
+   String ack = command;
+    ack += " ";
+    ack += ackNo;
+    ack += "\n";
+    
+   Serial.print(ack);
+   ackNo++;
 }
 
 void make_kick() { 
@@ -147,9 +157,10 @@ void make_kick() {
 }
 
 void open_grabber() {
-  if(verify_command("BB_OPENED"){ 
+  if(verify_command("BB_OPENED")){ 
     if (GRABBER_OPEN)
       return;
+    
     
     motorBackward(KICK_MOTOR, MAX_SPEED);
     delay(GRAB_TIME);
