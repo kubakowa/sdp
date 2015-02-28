@@ -178,8 +178,8 @@ class DefenderPass(Strategy):
     attacker zone.
     '''
 
-    ROTATE, SHOOT, FINISHED = 'ROTATE', 'SHOOT', 'FINISHED'
-    STATES = [ROTATE, SHOOT, FINISHED]
+    POSITION, ROTATE, SHOOT, FINISHED = 'POSITION', 'ROTATE', 'SHOOT', 'FINISHED'
+    STATES = [POSITION, ROTATE, SHOOT, FINISHED]
 
     UP, DOWN = 'UP', 'DOWN'
 
@@ -188,6 +188,7 @@ class DefenderPass(Strategy):
 
         # Map states into functions
         self.NEXT_ACTION_MAP = {
+	    self.POSITION: self.position,
 	    self.ROTATE: self.rotate,
             self.SHOOT: self.shoot,
             self.FINISHED: do_nothing
@@ -196,19 +197,33 @@ class DefenderPass(Strategy):
         self.our_defender = self.world.our_defender
 	self.our_attacker = self.world.our_attacker
 
-        # Find the position to shoot from and cache it
-        self.shooting_pos = self._get_shooting_coordinates(self.our_defender)
+	zone = self.world._pitch._zones[self.world.our_defender.zone]
+        min_x, max_x, min_y, max_y  = zone.boundingBox()
+        self.center_x = (min_x + max_x)/2
+        self.center_y = (min_y + max_y)/2
+
+    def position(self):
+	"""
+	Position to match attacker's y and x in the middle of the zone.
+	"""
+
+	disp, angle = self.our_defender.get_direction_to_point(self.our_defender.x, self.our_attacker.y)
+
+	if has_matched(self.our_defender, x=self.center_x, y=self.our_attacker.y):
+            self.current_state = self.ROTATE
+            return do_nothing()
+        else:
+            return calculate_motor_speed(disp, angle)
 
     def rotate(self):
 	"""
-	Rotate
+	Rotate towards the attacker
 	"""
-
 	angle = self.our_defender.get_rotation_to_point(self.our_attacker.x, self.our_attacker.y)
 
 	if is_facing_target(angle):
             self.current_state = self.SHOOT
-            return grab_ball()
+            return defender_stop()
         else:
             return calculate_motor_speed(None, angle)
 
@@ -309,11 +324,9 @@ class DefenderPositionForPass(Strategy):
     # make sure the grabber is open
     def prepare(self):
         self.current_state = self.READY
-        if self.our_defender.catcher == 'closed':
-            self.our_defender.catcher = 'open'
-            return open_catcher()
-        else:
-            return do_nothing()
+        self.our_defender.catcher = 'open'
+        return open_catcher()
+
 
     # wait for the pass
     def ready(self):
