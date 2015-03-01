@@ -72,10 +72,10 @@ class Tracker(object):
         frame_mask = cv2.inRange(frame_hsv, min_color, max_color)
 
         kernel = np.ones((5, 5), np.uint8)
-        erosion = cv2.erode(frame_mask, kernel, iterations=1)
+        opening = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, kernel, 3)
 
         # Apply threshold to the masked image, no idea what the values mean
-        return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+        return_val, threshold = cv2.threshold(frame_mask, 110, 255, 0)
 
         # Find contours, they describe the masked image - our T
         contours, hierarchy = cv2.findContours(
