@@ -8,6 +8,7 @@ from collections import namedtuple
 import numpy as np
 from findHSV import CalibrationGUI
 
+ROBOT_CONST_HEIGHT = 15.0
 
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']
@@ -130,7 +131,7 @@ class Vision:
         from the center of the lens.
         """
         plane_height = 250.0
-        robot_height = 20.0
+        robot_height = ROBOT_CONST_HEIGHT
         coefficient = robot_height/plane_height
 
         x = point[0]

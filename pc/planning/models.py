@@ -6,10 +6,9 @@ from vision import tools
 # Width measures the front and back of an object
 # Length measures along the sides of an object
 
-# TODO: do this properly!!!
-ROBOT_WIDTH = 40
-ROBOT_LENGTH = 40
-ROBOT_HEIGHT = 25
+ROBOT_WIDTH = 35
+ROBOT_LENGTH = 35
+ROBOT_HEIGHT = 15
 
 BALL_WIDTH = 5
 BALL_LENGTH = 5
