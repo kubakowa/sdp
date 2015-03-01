@@ -16,8 +16,7 @@ int KICK_TIME = 400;
 int GRAB_TIME = 200;
 int CLOSE_TIME = 250;
 int MAX_SPEED = 100;
-int OPEN_SPEED = 40;
-int INIT_TIME = 50;
+int OPEN_SPEED = 45;
 
 // command
 SerialCommand comm;
@@ -30,7 +29,6 @@ void setupCommands() {
   comm.addCommand("BB_STOP", make_stop);
   comm.addCommand("BB_PAUSE", make_pause);
   comm.addCommand("BB_STEP", make_incremental_move);
-  comm.addCommand("BB_RELEASE", release_grabber);
 } 
 
 void setup(){
@@ -46,33 +44,21 @@ void burst_move(int left_speed,int right_speed, int back_speed) {
     motorStop(BACK_MOTOR);
     
   if (left_speed > 0)
-    motorForward(LEFT_MOTOR, MAX_SPEED);
-    delay(INIT_TIME);
     motorForward(LEFT_MOTOR, left_speed);
   else if (left_speed < 0)
-    motorBackward(LEFT_MOTOR, -MAX_SPEED);
-    delay(INIT_TIME);
     motorBackward(LEFT_MOTOR, -left_speed);
     
   if (right_speed > 0)
-    motorForward(RIGHT_MOTOR, MAX_SPEED);
-    delay(INIT_TIME);
     motorForward(RIGHT_MOTOR, right_speed);
   else if (right_speed < 0)
-    motorBackward(RIGHT_MOTOR, -MAX_SPEED);
-    delay(INIT_TIME);
     motorBackward(RIGHT_MOTOR, -right_speed);
   
   if (forward)
     return;
       
   if (back_speed > 0)
-    motorForward(BACK_MOTOR, MAX_SPEED);
-    delay(INIT_TIME);
     motorForward(BACK_MOTOR, back_speed);
   else if (back_speed < 0)  
-    motorBackward(BACK_MOTOR, -MAX_SPEED);
-    delay(INIT_TIME);
     motorBackward(BACK_MOTOR, -back_speed); 
 }
  
@@ -151,16 +137,11 @@ void close_grabber() {
   motorStop(KICK_MOTOR);
   motorForward(KICK_MOTOR, MAX_SPEED);
   delay(CLOSE_TIME);
-  motorForward(KICK_MOTOR, OPEN_SPEED);;
+  motorStop(KICK_MOTOR);
   
   /* Assign state of the grabber */
   GRABBER_OPEN = 0;
   Serial.print("BB_CLOSED \n");
-}
-
-void release_grabber() {
-  motorStop(KICK_MOTOR);
-  GRABBER_OPEN = 0;
 }
 
 void make_pause() {
