@@ -290,7 +290,7 @@ class DefenderGrab(Strategy):
         displacement, angle = self.our_defender.get_direction_to_point(self.ball.x, self.ball.y)
         if self.our_defender.can_catch_ball(self.ball):
             self.current_state = self.GRAB_BALL
-            return defender_stop()
+            return do_nothing()
         else:
             return calculate_motor_speed(displacement, angle)
 

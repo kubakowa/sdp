@@ -38,7 +38,7 @@ void setup(){
 
 void burst_move(int left_speed,int right_speed, int back_speed) {
   
-  boolean forward = left_speed == right_speed;
+  boolean forward = left_speed*1.2 == right_speed; // All motors aren't born equal. Forward command is actually with left motor increased
   
   if (forward)
     motorStop(BACK_MOTOR);

@@ -250,13 +250,16 @@ class Defender_Controller(Robot_Controller):
                 pass
 
 	if volatile:
-	    comm.write(command)
-	    time.sleep(0.2)
-	    comm.write(command)
-	    time.sleep(0.2)
-	    comm.write(command)
-	    time.sleep(0.2)
-	    comm.write(command)
+	    if command=='BB_OPEN\n':
+	        comm.write(command)
+	        time.sleep(0.2)
+	        comm.write(command)
+	        time.sleep(0.2)
+	        comm.write(command)
+	        time.sleep(0.2)
+	        comm.write(command)
+	    else:
+	        comm.write(command)
 	
 #Commands we need to make sure get executed.
 #        if volatile:

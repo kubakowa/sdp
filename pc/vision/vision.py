@@ -210,8 +210,6 @@ class Vision:
         # Find robots and ball, use queue to
         # avoid deadlock and share resources
         positions = [q.get() for q in queues]
-	print positions[4]
-	print '--------------'
 
 	if (positions[4]['y']==-100 and positions[4]['x']==-100):
 	    positions[4]['y']=self.old_ball_y
