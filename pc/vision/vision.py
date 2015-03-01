@@ -8,7 +8,7 @@ from collections import namedtuple
 import numpy as np
 from findHSV import CalibrationGUI
 
-ROBOT_CONST_HEIGHT=15.0
+ROBOT_CONST_HEIGHT=20.0
 
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']

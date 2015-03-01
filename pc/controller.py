@@ -258,6 +258,8 @@ class Defender_Controller(Robot_Controller):
 	        comm.write(command)
 	        time.sleep(0.2)
 	        comm.write(command)
+	        time.sleep(0.2)
+	        comm.write(command)
 	    else:
 	        comm.write(command)
 	
@@ -286,12 +288,11 @@ class Defender_Controller(Robot_Controller):
 #		  t.cancel()  
 #		  break
 
-        print command
-
 	# assuming this is only for movement commands
         if not (command=="BB_MOVE 0 0 0\n" or command=="BB_STEP 0 0 0\n") and (not volatile):
             comm.write(command)
             self.is_moving = 1
+	    print command
 	else:
             print 'Empty command, not sending it'
             if self.is_moving == 1:

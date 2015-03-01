@@ -66,6 +66,7 @@ class Planner:
 
 	   # Switch from pass to grab
            elif self._defender_state == 'pass' and self._defender_current_strategy.current_state == 'FINISHED':
+	      print 'In the pass strategy, but do not have the ball'
               self._defender_state = 'grab'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
 

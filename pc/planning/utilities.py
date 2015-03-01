@@ -137,7 +137,7 @@ def calculate_motor_speed(displacement, angle):
 	if abs(angle) > pi:  
 	   factor = 0.6
 	else:
-	   factor = 0.4
+	   factor = 0.40
 	x = 0
 	y = 0
 	# need to turn clockwise
@@ -161,7 +161,7 @@ def calculate_motor_speed(displacement, angle):
 	elif displacement > 3 * DISTANCE_MATCH_THRESHOLD:
 	   factor = 0.60
 	else:
-	   factor = 0.55
+	   factor = 0.45
   
 	x = 0
 	y = 1
@@ -174,6 +174,7 @@ def calculate_motor_speed(displacement, angle):
 	
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0}
     else:
+	print 'Hopefuly, cannot see this message'
 	return do_nothing()
 
 # still need to refactor and simplify this function
@@ -306,6 +307,7 @@ def calculate_motor_speed_turn(displacement, angle, backwards_ok=False, careful=
     return do_nothing()
 
 def do_nothing():
+    print 'Do nothing'
     return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0} 
 
 def adjust_y_position(robot, target_y, side):

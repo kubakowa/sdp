@@ -273,11 +273,15 @@ class DefenderGrab(Strategy):
             self.PREPARE: self.prepare,
             self.GO_TO_BALL: self.position,
             self.GRAB_BALL: self.grab,
-            self.GRABBED: do_nothing
+            self.GRABBED: self.testing
         }
 
         self.our_defender = self.world.our_defender
         self.ball = self.world.ball
+
+    def testing(self):
+	print 'hello worl'
+	return do_nothing()
 
     # make sure the grabber is open
     def prepare(self):
@@ -290,7 +294,7 @@ class DefenderGrab(Strategy):
         displacement, angle = self.our_defender.get_direction_to_point(self.ball.x, self.ball.y)
         if self.our_defender.can_catch_ball(self.ball):
             self.current_state = self.GRAB_BALL
-            return do_nothing()
+            return defender_stop()
         else:
             return calculate_motor_speed(displacement, angle)
 
@@ -298,14 +302,15 @@ class DefenderGrab(Strategy):
     def grab(self):
         if self.our_defender.has_ball(self.ball):
             self.current_state = self.GRABBED
-            return do_nothing()
+            return defender_stop()
         else:
             if self.our_defender.can_catch_ball(self.ball):
                 self.our_defender.catcher = 'closed'
                 return grab_ball()
             else:
             	self.current_state = self.PREPARE
-                return do_nothing()
+                return defender_stop()
+       
 
 # strategy only necessery for the third milestone - in real game attacker unlikely to pass the ball to us
 class DefenderPositionForPass(Strategy):
