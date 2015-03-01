@@ -8,7 +8,7 @@ from collections import namedtuple
 import numpy as np
 from findHSV import CalibrationGUI
 
-
+ROBOT_CONST_HEIGHT=15.0
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']
 PITCHES = [0, 1]
@@ -22,6 +22,8 @@ class Vision:
     """
     Locate objects on the pitch.
     """
+    old_ball_x=0
+    old_ball_y=0
 
     def __init__(self, pitch, color, our_side, frame_shape, frame_center, calibration):
         """
@@ -130,7 +132,7 @@ class Vision:
         from the center of the lens.
         """
         plane_height = 250.0
-        robot_height = 20.0
+        robot_height = ROBOT_CONST_HEIGHT
         coefficient = robot_height/plane_height
 
         x = point[0]
@@ -207,7 +209,16 @@ class Vision:
         # Find robots and ball, use queue to
         # avoid deadlock and share resources
         positions = [q.get() for q in queues]
+	print positions[4]
+	print '--------------'
 
+	if (positions[4]['y']==-100 and positions[4]['x']==-100):
+	    positions[4]['y']=self.old_ball_y
+	    positions[4]['x']=self.old_ball_x
+	else:
+	    self.old_ball_x=positions[4]['x']
+	    self.old_ball_y=positions[4]['y']
+	    
         # terminate processes
         for process in processes:
             process.join()

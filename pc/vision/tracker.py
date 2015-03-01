@@ -413,7 +413,16 @@ class BallTracker(Tracker):
             )
 
             if len(contours) <= 0:
-                # print 'No ball found.'
+                print 'No ball found.'
+                queue.put({
+                    'name': self.name,
+                    'x': -100,
+                    'y': -100,
+                    'angle': None,
+                    'velocity': None
+                })
+                return
+		
                 pass
                 # queue.put(None)
             else:
@@ -422,7 +431,6 @@ class BallTracker(Tracker):
 
                 # Get center
                 (x, y), radius = cv2.minEnclosingCircle(cnt)
-
                 queue.put({
                     'name': self.name,
                     'x': x,
