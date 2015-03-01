@@ -233,47 +233,55 @@ class Defender_Controller(Robot_Controller):
                 command = 'BB_OPEN\n'
             except StandardError:
                 pass
-            
-        elif catcher == 2:
+
+	elif catcher == 2:
             try:
                 volatile = 1
                 command = 'BB_CLOSE\n'
             except StandardError:
                 pass
 
-#	if volatile:
-#	    comm.write(command)
-#	    time.sleep(0.2)
-#	    comm.write(command)
-#	    time.sleep(0.2)
-#	    comm.write(command)
-#	    time.sleep(0.2)
-#	    comm.write(command)
+	elif catcher == 3:
+            try:
+                volatile = 1
+		# TODO change this to BB_RELEASE
+                command = 'BB_KICK\n'
+            except StandardError:
+                pass
+
+	if volatile:
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
 	
 #Commands we need to make sure get executed.
-        if volatile:
-
-	  def sendVolatileCommand(command, comm):
-	      command=command[0:len(command)-1] #remove the \n at the end
-	      command=command + ' ' + str(self.ackNo) + '\n'
-	      print 'sending', command
-	      while(True):
-		  comm.write(command)
-		  
-		  time.sleep(0.4)
-		  print 'resending', command
-
-	  t = threading.Timer(0.1, sendVolatileCommand, [command, comm])
-	  t.start()
-	  while(True):
-	      acknowledgement=comm.readline()
-	      if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
-		  self.ackNo+=1
-		  t.cancel()  
-		  break
-	      if acknowledgement=="no comms":
-		  t.cancel()  
-		  break
+#        if volatile:
+#
+#	  def sendVolatileCommand(command, comm):
+#	      command=command[0:len(command)-1] #remove the \n at the end
+#	      command=command + ' ' + str(self.ackNo) + '\n'
+#	      print 'sending', command
+#	      while(True):
+#		  comm.write(command)
+#		  
+#		  time.sleep(0.4)
+#		  print 'resending', command
+#
+#	  t = threading.Timer(0.1, sendVolatileCommand, [command, comm])
+#	  t.start()
+#	  while(True):
+#	      acknowledgement=comm.readline()
+#	      if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
+#		  self.ackNo+=1
+#		  t.cancel()  
+#		  break
+#	      if acknowledgement=="no comms":
+#		  t.cancel()  
+#		  break
 
         print command
 

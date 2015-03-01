@@ -9,6 +9,7 @@ import numpy as np
 from findHSV import CalibrationGUI
 
 ROBOT_CONST_HEIGHT=15.0
+
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']
 PITCHES = [0, 1]
