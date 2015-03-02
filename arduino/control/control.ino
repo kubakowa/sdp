@@ -3,7 +3,7 @@
 #include <Wire.h>
 
 /* Motors assignment */
-#define LEFT_MOTOR 0
+#define LEFT_MOTOR 5
 #define RIGHT_MOTOR 1
 #define BACK_MOTOR 2
 #define KICK_MOTOR 3
@@ -16,7 +16,7 @@ int KICK_TIME = 400;
 int GRAB_TIME = 200;
 int CLOSE_TIME = 250;
 int MAX_SPEED = 100;
-int OPEN_SPEED = 45;
+int OPEN_SPEED = 25;
 
 // command
 SerialCommand comm;
@@ -38,7 +38,7 @@ void setup(){
 
 void burst_move(int left_speed,int right_speed, int back_speed) {
   
-  boolean forward = left_speed == right_speed;
+  boolean forward = (back_speed == 0);
   
   if (forward)
     motorStop(BACK_MOTOR);
@@ -137,7 +137,7 @@ void close_grabber() {
   motorStop(KICK_MOTOR);
   motorForward(KICK_MOTOR, MAX_SPEED);
   delay(CLOSE_TIME);
-  motorStop(KICK_MOTOR);
+  motorForward(KICK_MOTOR, OPEN_SPEED);
   
   /* Assign state of the grabber */
   GRABBER_OPEN = 0;
