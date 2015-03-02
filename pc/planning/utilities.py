@@ -136,6 +136,7 @@ def calculate_motor_speed(displacement, angle):
 	   factor = 0.6
 	else:
 	   factor = 0.4
+
 	x = 0
 	y = 0
 	# need to turn clockwise
@@ -146,7 +147,7 @@ def calculate_motor_speed(displacement, angle):
 	    w = 1
 
 	speeds = get_speeds_vector(x, y, w, factor)
-	left_motor = speeds['left_motor']
+	left_motor = 1.2 * speeds['left_motor']
 	right_motor = speeds['right_motor'] 
 	back_motor = speeds['back_motor']
 	

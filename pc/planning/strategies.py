@@ -211,9 +211,9 @@ class DefenderPass(Strategy):
 
     # give option for a pass
     def position(self):
-        disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position())
+        disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position(kick=0))
 
-        if has_matched(self.our_defender, x=self.def_center_x, y=self._get_y_position()):
+        if has_matched(self.our_defender, x=self.def_center_x, y=self._get_y_position(kick=0)):
             self.current_state = self.ROTATE
             return defender_stop()
         else:
@@ -224,7 +224,7 @@ class DefenderPass(Strategy):
 	"""
 	Rotate towards the attacker
 	"""
-	angle = self.our_defender.get_rotation_to_point(self.att_center_x, self._get_y_position())
+	angle = self.our_defender.get_rotation_to_point(self.att_center_x, self._get_y_position(kick=1))
 
 	if is_facing_target(angle):
             self.current_state = self.SHOOT
@@ -240,8 +240,11 @@ class DefenderPass(Strategy):
         self.our_defender.catcher = 'closed'
         return kick_ball()
 
-    def _get_y_position(self):
-	offset = 80
+    def _get_y_position(self, kick):
+	if kick == 0:
+	    offset = 80
+	else:
+	    offset = 120
 	if self.their_attacker.y <= self.center_y:
 	    return self.center_y + offset
 	else:

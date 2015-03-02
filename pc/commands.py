@@ -103,7 +103,7 @@ if __name__ == "__main__":
             print(speeds)
         elif command == 'clock':
             speeds = calc_motor_speeds(0, 0, -1) * 0.4
-            comm = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])    
+            comm = 'BB_MOVE %d %d %d\n' %(1.2*speeds[0], speeds[1], speeds[2])    
             print(speeds)    
         elif command == 'q':
             comm = 'BB_STOP\n'
