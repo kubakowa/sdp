@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 from collections import namedtuple
@@ -426,13 +427,15 @@ class BallTracker(Tracker):
                     'velocity': None
                 })
                 return
+
+                pass
+                # queue.put(None)
             else:
                 # Trim contours matrix
                 cnt = self.get_largest_contour(contours)
 
                 # Get center
                 (x, y), radius = cv2.minEnclosingCircle(cnt)
-
                 queue.put({
                     'name': self.name,
                     'x': x,

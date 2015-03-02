@@ -241,46 +241,44 @@ class Defender_Controller(Robot_Controller):
             except StandardError:
                 pass
 
-#	if volatile:
-#	    comm.write(command)
-#	    time.sleep(0.2)
-#	    comm.write(command)
-#	    time.sleep(0.2)
-#	    comm.write(command)
-#	    time.sleep(0.2)
-#	    comm.write(command)
+	if volatile:
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
 	
 #Commands we need to make sure get executed.
-        if volatile:
-
-	  def sendVolatileCommand(command, comm):
-	      command=command[0:len(command)-1] #remove the \n at the end
-	      command=command + ' ' + str(self.ackNo) + '\n'
-	      print 'sending', command
-	      while(True):
-		  comm.write(command)
-		  
-		  time.sleep(0.4)
-		  print 'resending', command
-
-	  t = threading.Timer(0.1, sendVolatileCommand, [command, comm])
-	  t.start()
-	  while(True):
-	      acknowledgement=comm.readline()
-	      if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
-		  self.ackNo+=1
-		  t.cancel()  
-		  break
-	      if acknowledgement=="no comms":
-		  t.cancel()  
-		  break
-
-        print command
+#        if volatile:
+#
+#	  def sendVolatileCommand(command):
+#	      command=command[0:len(command)-1] #remove the \n at the end
+#	      #command=command + ' ' + str(self.ackNo) + '\n'
+#	      print 'sending', command
+#	      while(True):
+#		  comm.write(command)
+#		  time.sleep(0.1)
+#		  print 'resending', command
+#
+#	  t = threading.Timer(0.1, sendVolatileCommand, [command])
+#	  t.start()
+#	  while(True):
+#	      acknowledgement=comm.readline()
+#	      if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
+#		  self.ackNo+=1
+#		  t.cancel()  
+#		  break
+#	      if acknowledgement=="no comms":
+#		  t.cancel()  
+#		  break
 
 	# assuming this is only for movement commands
-        if not (command=="BB_MOVE 0 0 0\n" or command=="BB_STEP 0 0 0\n") and (not volatile):
+        if not (command=="BB_MOVE 0 0 0\n" or command=="BB_STEP 0 0 0\n"):
             comm.write(command)
             self.is_moving = 1
+	    print command
 	else:
             print 'Empty command, not sending it'
             if self.is_moving == 1:
@@ -325,9 +323,7 @@ class Arduino:
     def readline(self):
         if self.comms == 1:
 	    received=self.serial.readline()
-	    received=self.serial.readline()
-	    print "while waiting for ACK, received", received, '-end'
-	    print "\n"
+	    print "while waiting for ACK, received", received
             return received
 	else:
 	    return "no comms"

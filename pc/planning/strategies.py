@@ -196,34 +196,39 @@ class DefenderPass(Strategy):
 
         self.our_defender = self.world.our_defender
 	self.our_attacker = self.world.our_attacker
+	self.their_attacker = self.world.their_attacker
 
-	zone = self.world._pitch._zones[self.world.our_defender.zone]
-        min_x, max_x, min_y, max_y  = zone.boundingBox()
-        self.center_x = (min_x + max_x)/2
-        self.center_y = (min_y + max_y)/2
+	def_zone = self.world._pitch._zones[self.world.our_defender.zone]
+	att_zone = self.world._pitch._zones[self.world.our_attacker.zone]
 
+	min_x, max_x, min_y, max_y  = def_zone.boundingBox()
+	self.def_center_x = (min_x + max_x)/2
+	self.center_y = (min_y + max_y)/2
+
+	min_x, max_x, min_y, max_y  = att_zone.boundingBox()
+	self.att_center_x = (min_x + max_x)/2
+
+
+    # give option for a pass
     def position(self):
-	"""
-	Position to match attacker's y and x in the middle of the zone.
-	"""
+        disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position(kick=0))
 
-	disp, angle = self.our_defender.get_direction_to_point(self.our_defender.x, self.our_attacker.y)
-
-	if has_matched(self.our_defender, x=self.center_x, y=self.our_attacker.y):
+        if has_matched(self.our_defender, x=self.def_center_x, y=self._get_y_position(kick=0)):
             self.current_state = self.ROTATE
-            return do_nothing()
+            return defender_stop()
         else:
             return calculate_motor_speed(disp, angle)
+
 
     def rotate(self):
 	"""
 	Rotate towards the attacker
 	"""
-	angle = self.our_defender.get_rotation_to_point(self.our_attacker.x, self.our_attacker.y)
+	angle = self.our_defender.get_rotation_to_point(self.att_center_x, self._get_y_position(kick=1))
 
 	if is_facing_target(angle):
             self.current_state = self.SHOOT
-            return defender_stop()
+            return grab_ball()
         else:
             return calculate_motor_speed(None, angle)
 
@@ -234,6 +239,16 @@ class DefenderPass(Strategy):
         self.current_state = self.FINISHED
         self.our_defender.catcher = 'closed'
         return kick_ball()
+
+    def _get_y_position(self, kick):
+	if kick == 0:
+	    offset = 80
+	else:
+	    offset = 120
+	if self.their_attacker.y <= self.center_y:
+	    return self.center_y + offset
+	else:
+	    return self.center_y - offset
 
     def _get_shooting_coordinates(self, robot):
         """
@@ -261,11 +276,15 @@ class DefenderGrab(Strategy):
             self.PREPARE: self.prepare,
             self.GO_TO_BALL: self.position,
             self.GRAB_BALL: self.grab,
-            self.GRABBED: do_nothing
+            self.GRABBED: self.testing
         }
 
         self.our_defender = self.world.our_defender
         self.ball = self.world.ball
+
+    def testing(self):
+	print 'hello world'
+	return do_nothing()
 
     # make sure the grabber is open
     def prepare(self):
@@ -278,7 +297,7 @@ class DefenderGrab(Strategy):
         displacement, angle = self.our_defender.get_direction_to_point(self.ball.x, self.ball.y)
         if self.our_defender.can_catch_ball(self.ball):
             self.current_state = self.GRAB_BALL
-            return do_nothing()
+            return defender_stop()
         else:
             return calculate_motor_speed(displacement, angle)
 
@@ -286,52 +305,89 @@ class DefenderGrab(Strategy):
     def grab(self):
         if self.our_defender.has_ball(self.ball):
             self.current_state = self.GRABBED
-            return do_nothing()
+            return defender_stop()
         else:
             if self.our_defender.can_catch_ball(self.ball):
                 self.our_defender.catcher = 'closed'
                 return grab_ball()
             else:
             	self.current_state = self.PREPARE
-                return do_nothing()
+                return defender_stop()
+       
 
 # strategy only necessery for the third milestone - in real game attacker unlikely to pass the ball to us
 class DefenderPositionForPass(Strategy):
 
-    POSITION, PREPARE, READY = 'POSITION', 'PREPARE', 'READY' 
-    STATES = [POSITION, PREPARE, READY]
+    PREPARE, POSITION, ROTATE, READY = 'PREPARE', 'POSITION', 'ROTATE', 'READY' 
+    STATES = [PREPARE, POSITION, ROTATE, READY]
     def __init__(self, world):
         super(DefenderPositionForPass, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
+	    self.PREPARE: self.prepare,
 	    self.POSITION: self.position,
-            self.PREPARE: self.prepare,
+            self.ROTATE: self.rotate,
 	    self.READY: self.ready
         }
 
         self.our_defender = self.world.our_defender
 	self.our_attacker = self.world.our_attacker
-        self.ball = self.world.ball
+	self.their_attacker = self.world.their_attacker
 
+	def_zone = self.world._pitch._zones[self.world.our_defender.zone]
+	att_zone = self.world._pitch._zones[self.world.our_attacker.zone]
 
-    # give option for a pass
-    def position(self):
-        # TODO: position 
-	self.current_state = self.POSITION
-	return do_nothing();
+	min_x, max_x, min_y, max_y  = def_zone.boundingBox()
+	self.def_center_x = (min_x + max_x)/2
+	self.center_y = (min_y + max_y)/2
 
+	min_x, max_x, min_y, max_y  = att_zone.boundingBox()
+	self.att_center_x = (min_x + max_x)/2
 
-    # make sure the grabber is open
     def prepare(self):
-        self.current_state = self.READY
-        self.our_defender.catcher = 'open'
-        return open_catcher()
+	self.current_state = self.POSITION
+	self.our_defender.catcher = 'closed'
+	return kick_ball()
+
+    def position(self):
+        disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position())
+
+        if has_matched(self.our_defender, x=self.def_center_x, y=self._get_y_position()):
+            self.current_state = self.ROTATE
+            return defender_stop()
+        else:
+            return calculate_motor_speed(disp, angle)
 
 
-    # wait for the pass
+    def rotate(self):
+	"""
+	Rotate towards the attacker
+	"""
+	angle = self.our_defender.get_rotation_to_point(self.att_center_x, self._get_y_position())
+
+	if is_facing_target(angle):
+            self.current_state = self.READY
+            return defender_stop()
+        else:
+            return calculate_motor_speed(None, angle)
+
+  
     def ready(self):
-      return do_nothing();
+	"""
+	Open the grabber and wait for the pass
+	"""
+	if self.our_defender.catcher == 'closed':
+	    self.our_defender.catcher = 'open'
+	    return open_catcher()
+	else:
+	    return do_nothing();
        
+    def _get_y_position(self):
+	offset = 80
+	if self.their_attacker.y <= self.center_y:
+	    return self.center_y + offset
+	else:
+	    return self.center_y - offset
 
 ###########################################################################
 # END OF DEFENDER STRATEGIES
@@ -602,7 +658,6 @@ class AttackerScore(Strategy):
 class AttackerDriveBy(Strategy):
     """
     Strategy where we drive forward and backwards, rotate and shoot.
-
     Idea:
         1) Move to a location either in the UP or DOWN section, opposite to
            the location of the opposite defender
@@ -949,7 +1004,6 @@ class AttackerTurnScore(Strategy):
 class AttackerGrabCareful(Strategy):
     """
     Carefully grabbing the ball when it is located by the wall.
-
     Idea:
         Approach perpendicular to the wall to avoid getting stuck by the wall.
     """

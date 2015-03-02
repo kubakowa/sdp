@@ -136,6 +136,7 @@ def calculate_motor_speed(displacement, angle):
 	   factor = 0.6
 	else:
 	   factor = 0.4
+
 	x = 0
 	y = 0
 	# need to turn clockwise
@@ -146,20 +147,20 @@ def calculate_motor_speed(displacement, angle):
 	    w = 1
 
 	speeds = get_speeds_vector(x, y, w, factor)
-	left_motor = speeds['left_motor']
+	left_motor = 1.2 * speeds['left_motor']
 	right_motor = speeds['right_motor'] 
 	back_motor = speeds['back_motor']
 	
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 1, 'stop': 0}
-    
     # need to adjust distance
+
     if (displacement is not None and displacement > DISTANCE_MATCH_THRESHOLD):
 	if displacement > 4 * DISTANCE_MATCH_THRESHOLD:  
-	   factor = 0.60
+	   factor = 0.70
 	elif displacement > 3 * DISTANCE_MATCH_THRESHOLD:
-	   factor = 0.55
+	   factor = 0.65
 	else:
-	   factor = 0.50
+	   factor = 0.5
   
 	x = 0
 	y = 1
