@@ -33,7 +33,7 @@ class Tracker(object):
 
             # Convert frame to HSV
             frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
+            
             # Create a mask
             frame_mask = cv2.inRange(frame_hsv, adjustments['min'], adjustments['max'])
 
@@ -46,9 +46,11 @@ class Tracker(object):
                 cv2.RETR_TREE,
                 cv2.CHAIN_APPROX_SIMPLE
             )
+
             # print contours
             return contours
         except:
+
             return None
 
     # TODO: Used by Ball tracker - REFACTOR
@@ -119,6 +121,8 @@ class Tracker(object):
         Joins multiple contours together.
         """
         cnts = []
+        print '-----------------------'
+        print contours
         for i, cnt in enumerate(contours):
             if cv2.contourArea(cnt) > 100:
                 cnts.append(cnt)
@@ -413,9 +417,15 @@ class BallTracker(Tracker):
             )
 
             if len(contours) <= 0:
-                # print 'No ball found.'
-                pass
-                # queue.put(None)
+                print 'No ball found.'
+                queue.put({
+                    'name': self.name,
+                    'x': -100,
+                    'y': -100,
+                    'angle': None,
+                    'velocity': None
+                })
+                return
             else:
                 # Trim contours matrix
                 cnt = self.get_largest_contour(contours)

@@ -4,6 +4,7 @@ import json
 import socket
 import os
 import cPickle
+import ast
 
 PATH = os.path.dirname(os.path.realpath(__file__))
 BLACK = (0, 0, 0)
@@ -25,7 +26,7 @@ PITCHES = ['Pitch_0', 'Pitch_1']
 
 
 def get_zones(width, height, filename=PATH+'/calibrations/croppings.json', pitch=0):
-    calibration = get_croppings(filename, pitch)
+    calibration = get_croppings(pitch=pitch)
     zones_poly = [calibration[key] for key in ['Zone_0', 'Zone_1', 'Zone_2', 'Zone_3']]
 
     maxes = [max(zone, key=lambda x: x[0])[0] for zone in zones_poly[:3]]
@@ -37,16 +38,57 @@ def get_zones(width, height, filename=PATH+'/calibrations/croppings.json', pitch
     return [(mids[i], mids[i+1], 0, height) for i in range(4)]
 
 
-def get_croppings(filename=PATH+'/calibrations/croppings.json', pitch=0):
-    croppings = get_json(filename)
+def get_croppings(pitch=0):
+    filename=PATH+'/calibrations/croppings.json'
+    croppings = (get_json(filename))  
     return croppings[PITCHES[pitch]]
 
 
 def get_json(filename=PATH+'/calibrations/calibrations.json'):
     _file = open(filename, 'r')
-    content = json.loads(_file.read())
+    readString=(_file.read())
+    length = len(readString)
+   # print readString
+    if readString[length-1] == '"':
+        readString=readString[1:len(readString)-2]
+    content = json.loads(readString)
+    if isinstance(content, unicode):
+        content = ast.literal_eval(content)
     _file.close()
     return content
+
+"""def get_cropping(pitch,filename=PATH+'/calibrations/croppings.json'):
+    croppings = get_jsonCrop(filename)
+    return (pitch)"""
+
+def del_croppings(filename=PATH+'/calibrations/croppings.json', pitch=0):
+    _file = open(filename, 'w').close()
+    
+def write_croppings(data, filename=PATH+'/calibrations/croppings.json', pitch=0):
+    _file = open(filename, 'w+') 
+    print type(data)
+    print '-------------------------------'
+    json.dump(data, _file)
+    _file.close()
+
+"""def get_jsonCrop(filename=PATH+'/calibrations/croppings.json'):
+    _file = open(filename, 'r')
+    content = _file.readline()
+    content = str(content)
+    i = (len(content) -1)
+    count = 0
+    while i > 0:
+        if content[i] == '}':
+            count = count + 1
+        i = i - 1
+    if (count-3) > 0:
+        content = content[:-(count-3)]
+    content = json.dumps(content)
+    "content = json.loads(content)"
+    content = eval(content)
+    _file.close()
+    
+    return content"""
 
 
 def get_radial_data(pitch=0, filename=PATH+'/calibrations/undistort.txt'):
@@ -58,7 +100,7 @@ def get_radial_data(pitch=0, filename=PATH+'/calibrations/undistort.txt'):
 
 def get_colors(pitch=0, filename=PATH+'/calibrations/calibrations.json'):
     """
-    Get colros from the JSON calibration file.
+    Get colours from the JSON calibration file.
     Converts all
     """
     json_content = get_json(filename)

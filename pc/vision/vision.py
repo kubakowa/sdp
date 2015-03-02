@@ -7,7 +7,10 @@ from colors import BGR_COMMON
 from collections import namedtuple
 import numpy as np
 from findHSV import CalibrationGUI
+import json,ast
+import os
 
+ROBOT_CONST_HEIGHT=15.0
 
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']
@@ -16,17 +19,18 @@ PITCHES = [0, 1]
 PROCESSING_DEBUG = False
 
 Center = namedtuple('Center', 'x y')
-
+PATH = os.path.dirname(os.path.realpath(__file__))
 
 class Vision:
     """
     Locate objects on the pitch.
     """
+    old_ball_x=0
+    old_ball_y=0
 
     def __init__(self, pitch, color, our_side, frame_shape, frame_center, calibration):
         """
         Initialize the vision system.
-
         Params:
             [int] pitch         pitch number (0 or 1)
             [string] color      color of our robot
@@ -95,7 +99,6 @@ class Vision:
     def locate(self, frame):
         """
         Find objects on the pitch using multiprocessing.
-
         Returns:
             [5-tuple] Location of the robots and the ball
         """
@@ -130,7 +133,7 @@ class Vision:
         from the center of the lens.
         """
         plane_height = 250.0
-        robot_height = 20.0
+        robot_height = ROBOT_CONST_HEIGHT
         coefficient = robot_height/plane_height
 
         x = point[0]
@@ -186,10 +189,8 @@ class Vision:
     def _run_trackers(self, frame):
         """
         Run trackers as separate processes
-
         Params:
             [np.frame] frame        - frame to run trackers on
-
         Returns:
             [5-tuple] positions     - locations of the robots and the ball
         """
@@ -208,6 +209,13 @@ class Vision:
         # avoid deadlock and share resources
         positions = [q.get() for q in queues]
 
+        if (positions[4]['y']==-100 and positions[4]['x']==-100):
+            positions[4]['y']=self.old_ball_y
+            positions[4]['x']=self.old_ball_x
+        else:
+            self.old_ball_x=positions[4]['x']
+            self.old_ball_y=positions[4]['y']
+        
         # terminate processes
         for process in processes:
             process.join()
@@ -254,7 +262,6 @@ class Camera(object):
     def get_frame(self):
         """
         Retrieve a frame from the camera.
-
         Returns the frame if available, otherwise returns None.
         """
         # status, frame = True, cv2.imread('img/i_all/00000003.jpg')
@@ -280,6 +287,8 @@ class GUI(object):
     BG_SUB = 'BG Subtract'
     NORMALIZE = 'Normalize  '
     COMMS = 'Communications on/off '
+    XCO = "x co-ordinate"
+    YCO = "y co-ordinate"
 
     def nothing(self, x):
         pass
@@ -296,11 +305,92 @@ class GUI(object):
         cv2.createTrackbar(self.NORMALIZE, self.VISION, 0, 1, self.nothing)
         cv2.createTrackbar(
             self.COMMS, self.VISION, self.arduino.comms, 1, lambda x:  self.arduino.setComms(x))
+        cv2.createTrackbar(self.XCO, self.VISION, 25, 50, lambda x: self.change_xco(pitch))
+        cv2.createTrackbar(self.YCO, self.VISION, 25, 50, lambda x: self.change_yco(pitch))
+
+        
+    def change_xco(self, pitch):
+
+        """Change croppings in the x axis"""
+
+        value = cv2.getTrackbarPos(self.XCO, self.VISION)
+        original = tools.get_croppings(pitch=pitch)
+        croppings = ast.literal_eval(json.dumps(original))
+        v = value-25
+        for x in croppings:
+            for e in croppings.get(x):
+                e[0] = e[0] + v
+                
+        
+        data1 = ast.literal_eval(json.dumps(croppings))
+     
+        if pitch == 0:
+            data2 = tools.get_croppings(1)
+            data2 = ast.literal_eval(json.dumps(data2))
+            data = {'Pitch_0': data1, 'Pitch_1':data2 }
+        else :
+            data2 = tools.get_croppings(0)
+            data2 = ast.literal_eval(json.dumps(data2))
+            data = {'Pitch_0':data2, 'Pitch_1':data1  }
+            
+        content = data 
+        content = str(content)
+        i = (len(content) -1)
+        count = 0
+        while i > 0:
+            if content[i] == '}':
+                count = count + 1
+            else:
+                break
+            i = i - 1
+        if (count-3) > 0:
+            content = content[:-(count-3)]
+        content=ast.literal_eval(content)
+        tools.write_croppings(content, pitch=pitch)
+    
+    def change_yco(self, pitch):
+        """Change croppings in the y axis
+  
+            "cv2.getTrackbarPos(self.XCO, self.VISION))"""
+        value = cv2.getTrackbarPos(self.YCO, self.VISION)
+        croppings = tools.get_croppings(pitch=pitch)
+        v = value-25
+        for x in croppings:
+            for e in croppings.get(x):
+                e[1] = e[1] + v
+        data1 = ast.literal_eval(json.dumps(croppings))
+        
+     
+        if pitch == 0:
+            data2 = tools.get_croppings(1)
+            data2 = ast.literal_eval(json.dumps(data2))
+            data = {'Pitch_0': data1, 'Pitch_1':data2 }
+        else :
+            data2 = tools.get_croppings(0)
+            data2 = ast.literal_eval(json.dumps(data2))
+            data = {'Pitch_0':data2, 'Pitch_1':data1}  
+        
+        content = data 
+        content = str(content)
+        i = (len(content) -1)
+        count = 0
+        while i > 0:
+            if content[i] == '}':
+                count = count + 1
+            else:
+                break
+            i = i - 1
+        if (count-3) > 0:
+            content = content[:-(count-3)]
+        content=ast.literal_eval(content)
+        tools.write_croppings(content, pitch=pitch)
+
+    
+        
 
     def to_info(self, args):
         """
         Convert a tuple into a vector
-
         Return a Vector
         """
         x, y, angle, velocity = None, None, None, None
@@ -329,7 +419,6 @@ class GUI(object):
              key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
-
         NOTE: model_positions contains coordinates with y coordinate reversed!
         """
         # Get general information about the frame
@@ -465,7 +554,7 @@ class GUI(object):
             if velocity is not None:
                 self.draw_text(frame, 'velocity: %.2f' % velocity, draw_x, y_offset + 40)
 
-	# only show defender actions
+    # only show defender actions
         if text == 'our_defender':
             self.draw_actions(frame, d_action, draw_x, y_offset+50)
 
@@ -518,7 +607,7 @@ class GUI(object):
             frame, "Left Motor: " + str(action['left_motor']), x, y+5, color=BGR_COMMON['white'])
         self.draw_text(
             frame, "Right Motor: " + str(action['right_motor']), x, y+15, color=BGR_COMMON['white'])
-	self.draw_text(
+        self.draw_text(
             frame, "Back Motor: " + str(action['back_motor']), x, y+25, color=BGR_COMMON['white'])
 
         self.draw_text(frame, "Kicker: " + str(action['kicker']), x, y + 35, color=BGR_COMMON['white'])
