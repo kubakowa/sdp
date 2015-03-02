@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 from collections import namedtuple
@@ -72,10 +73,10 @@ class Tracker(object):
         frame_mask = cv2.inRange(frame_hsv, min_color, max_color)
 
         kernel = np.ones((5, 5), np.uint8)
-        erosion = cv2.erode(frame_mask, kernel, iterations=1)
+        opening = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, kernel, 3)
 
         # Apply threshold to the masked image, no idea what the values mean
-        return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+        return_val, threshold = cv2.threshold(frame_mask, 110, 255, 0)
 
         # Find contours, they describe the masked image - our T
         contours, hierarchy = cv2.findContours(
@@ -413,7 +414,16 @@ class BallTracker(Tracker):
             )
 
             if len(contours) <= 0:
-                # print 'No ball found.'
+                print 'No ball found.'
+                queue.put({
+                    'name': self.name,
+                    'x': -100,
+                    'y': -100,
+                    'angle': None,
+                    'velocity': None
+                })
+                return
+		
                 pass
                 # queue.put(None)
             else:
@@ -422,7 +432,6 @@ class BallTracker(Tracker):
 
                 # Get center
                 (x, y), radius = cv2.minEnclosingCircle(cnt)
-
                 queue.put({
                     'name': self.name,
                     'x': x,
