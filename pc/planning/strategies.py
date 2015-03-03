@@ -347,7 +347,7 @@ class DefenderPositionForPass(Strategy):
     def prepare(self):
 	self.current_state = self.POSITION
 	self.our_defender.catcher = 'closed'
-	return kick_ball()
+	return do_nothing()
 
     def position(self):
         disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position())

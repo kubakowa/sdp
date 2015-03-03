@@ -13,7 +13,7 @@ int GRABBER_OPEN = 0;
 
 /* Constants */
 int KICK_TIME = 1000;
-int GRAB_TIME = 200;
+int GRAB_TIME = 240;
 int CLOSE_TIME = 400;
 int MAX_SPEED = 100;
 int OPEN_SPEED = 25;
