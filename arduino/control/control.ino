@@ -12,11 +12,12 @@
 int GRABBER_OPEN = 0;
 
 /* Constants */
-int KICK_TIME = 400;
+int KICK_TIME = 1000;
 int GRAB_TIME = 200;
-int CLOSE_TIME = 250;
+int CLOSE_TIME = 400;
 int MAX_SPEED = 100;
 int OPEN_SPEED = 25;
+int CLOSE_SPEED = 70;
 
 // command
 SerialCommand comm;
@@ -137,7 +138,7 @@ void close_grabber() {
   motorStop(KICK_MOTOR);
   motorForward(KICK_MOTOR, MAX_SPEED);
   delay(CLOSE_TIME);
-  motorForward(KICK_MOTOR, OPEN_SPEED);
+  motorForward(KICK_MOTOR, CLOSE_SPEED);
   
   /* Assign state of the grabber */
   GRABBER_OPEN = 0;

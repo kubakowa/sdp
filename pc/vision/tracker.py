@@ -122,8 +122,6 @@ class Tracker(object):
         Joins multiple contours together.
         """
         cnts = []
-        print '-----------------------'
-        print contours
         for i, cnt in enumerate(contours):
             if cv2.contourArea(cnt) > 100:
                 cnts.append(cnt)

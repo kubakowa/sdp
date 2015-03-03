@@ -150,7 +150,7 @@ def calculate_motor_speed(displacement, angle):
 	left_motor = 1.2 * speeds['left_motor']
 	right_motor = speeds['right_motor'] 
 	back_motor = speeds['back_motor']
-	
+
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 1, 'stop': 0}
     # need to adjust distance
 

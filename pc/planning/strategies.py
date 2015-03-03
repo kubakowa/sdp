@@ -244,7 +244,7 @@ class DefenderPass(Strategy):
 	if kick == 0:
 	    offset = 80
 	else:
-	    offset = 120
+	    offset = 160
 	if self.their_attacker.y <= self.center_y:
 	    return self.center_y + offset
 	else:
