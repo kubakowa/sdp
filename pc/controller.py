@@ -160,10 +160,10 @@ class Defender_Controller(Robot_Controller):
     Defender implementation.
     """
 
-    acknowledgements={"BB_OPEN\n":"BB_OPENED ",
-		      "BB_CLOSE\n":"BB_CLOSED ",
-		      "BB_KICK\n":"BB_KICKED ", 
-		      "BB_STOP\n":"BB_STOPPED "
+    acknowledgements={"BB_OPEN":"BB_OPENED ",
+		      "BB_CLOSE":"BB_CLOSED ",
+		      "BB_KICK":"BB_KICKED ", 
+		      "BB_STOP":"BB_STOPPED "
 		      }
 
     is_turning = 0
@@ -210,69 +210,70 @@ class Defender_Controller(Robot_Controller):
         
 	# if turning and current action does not involve turning, stop robot before proceeding
 	if self.is_turning == 1 and turn == 0:
-            comm.write('BB_STOP\n')
+	    stop=1
 
-	if stop == 1:
-	    comm.write('BB_STOP\n')
-	    self.is_moving = 0
-	
 	if turn == 1:
             self.is_turning = 1
         else:
             self.is_turning = 0
 
+#Commands we need to make sure get executed - volatile
+	class AckThread(threading.Thread):
+
+	    def __init__(self, command, ackNo):
+		threading.Thread.__init__(self)
+		self.command=command
+		self.event = threading.Event()
+		self.ackNo=ackNo
+
+	    def run(self):
+		    self.command=self.command+" "+str(self.ackNo)+"\n"
+		    print 'sending', self.command
+		    while not self.event.is_set():
+			comm.write(self.command)
+			time.sleep(0.3)
+			print 'resending', self.command
+
+	    def stop(self):
+		self.event.set()
+
+
+
+	def send_volatile(command):
+	    thread = AckThread(command, self.ackNo)
+	    thread.start()
+	    while(True):
+	        acknowledgement=comm.readline()
+		print "ack is now ---- " + acknowledgement
+	        if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
+		    print "correct ack received!!!!!!!!!!!!"
+		    self.ackNo+=1
+		    thread.stop()  
+		    break
+	        if acknowledgement=="no comms":
+		    thread.stop() 
+		    break
+
+
+#Stop can be sent in the same loop as other commands
+	if stop == 1: 
+	    send_volatile('BB_STOP')
+	    self.is_moving = 0
+
         if kicker == 1:
-            try:
-                volatile = 1
-                command = 'BB_KICK\n'
-            except StandardError:
-                pass
+            volatile = 1
+            command = 'BB_KICK'
         elif catcher == 1:
-            try:
-                volatile = 1
-                command = 'BB_OPEN\n'
-            except StandardError:
-                pass
-            
+            volatile = 1
+            command = 'BB_OPEN'
         elif catcher == 2:
-            try:
-                volatile = 1
-                command = 'BB_CLOSE\n'
-            except StandardError:
-                pass
+            volatile = 1
+            command = 'BB_CLOSE'
 
 	if volatile:
-	    comm.write(command)
-	    time.sleep(0.2)
-	    comm.write(command)
-	    time.sleep(0.2)
-	    comm.write(command)
-	    time.sleep(0.2)
-	    comm.write(command)
-	
-#Commands we need to make sure get executed.
-#        if volatile:
-#
-#	  def sendVolatileCommand(command):
-#	      command=command[0:len(command)-1] #remove the \n at the end
-#	      #command=command + ' ' + str(self.ackNo) + '\n'
-#	      print 'sending', command
-#	      while(True):
-#		  comm.write(command)
-#		  time.sleep(0.1)
-#		  print 'resending', command
-#
-#	  t = threading.Timer(0.1, sendVolatileCommand, [command])
-#	  t.start()
-#	  while(True):
-#	      acknowledgement=comm.readline()
-#	      if acknowledgement==self.acknowledgements[command]+str(self.ackNo)+'\n':
-#		  self.ackNo+=1
-#		  t.cancel()  
-#		  break
-#	      if acknowledgement=="no comms":
-#		  t.cancel()  
-#		  break
+	  send_volatile(command)
+
+
 
 	# assuming this is only for movement commands
         if not (command=="BB_MOVE 0 0 0\n" or command=="BB_STEP 0 0 0\n"):
@@ -322,11 +323,26 @@ class Arduino:
 
     def readline(self):
         if self.comms == 1:
-	    received=self.serial.readline()
-	    print "while waiting for ACK, received", received
-            return received
+	    try:
+	      
+	      received=self.serial.readline()
+	      corrupted=1
+	      for el in ["BB_OPENED ", "BB_CLOSED ", "BB_KICKED ", "BB_STOPPED "]:
+		if el in received:
+		  corrupted =0
+	      if corrupted:
+		self.serial.flushInput()
+		print "flushing"
+		received=self.serial.readline()
+	      print "while waiting for ACK, received", received
+	      if received=="":
+		print "nothing, going to try reading further"
+	      return received
+	    except:
+	      return "none"
 	else:
-	    return "no comms"
+	      return "no comms"
+
 
 
 if __name__ == '__main__':
