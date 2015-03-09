@@ -3,21 +3,21 @@
 #include <Wire.h>
 
 /* Motors assignment */
-#define LEFT_MOTOR 5
+#define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
 #define BACK_MOTOR 2
 #define KICK_MOTOR 3
 
 /* State */
 int GRABBER_OPEN = 0;
+int ackNo = 0;
 
 /* Constants */
-int KICK_TIME = 1000;
-int GRAB_TIME = 240;
-int CLOSE_TIME = 400;
+int KICK_TIME = 400;
+int GRAB_TIME = 200;
+int CLOSE_TIME = 250;
 int MAX_SPEED = 100;
-int OPEN_SPEED = 25;
-int CLOSE_SPEED = 70;
+int OPEN_SPEED = 45;
 
 // command
 SerialCommand comm;
@@ -30,6 +30,7 @@ void setupCommands() {
   comm.addCommand("BB_STOP", make_stop);
   comm.addCommand("BB_PAUSE", make_pause);
   comm.addCommand("BB_STEP", make_incremental_move);
+  comm.setDefaultHandler(unrecognized);   
 } 
 
 void setup(){
@@ -37,9 +38,15 @@ void setup(){
   setupCommands();
 }
 
+void unrecognized(const char *command) {
+  Serial.println("What?");
+  Serial.println(command);
+  Serial.flush();
+}
+
 void burst_move(int left_speed,int right_speed, int back_speed) {
   
-  boolean forward = (back_speed == 0);
+  boolean forward = left_speed == right_speed;
   
   if (forward)
     motorStop(BACK_MOTOR);
@@ -66,8 +73,7 @@ void burst_move(int left_speed,int right_speed, int back_speed) {
 void make_incremental_move() {
   char *left_m;
   char *right_m;
-  char *back_m;
-  
+  char *back_m; 
   int left_speed;
   int right_speed;
   int back_speed;
@@ -109,40 +115,84 @@ void make_move() {
   burst_move(left_speed, right_speed, back_speed);
 }
 
-void make_kick() {
+// Volatile Commands
+bool verify_command(String command){
+  // Get broadcast acknowledgement number
   
-  if (GRABBER_OPEN)
-    return;
+  int ack_number_pc = atoi(comm.next());
   
-  motorBackward(KICK_MOTOR, MAX_SPEED);
-  delay(KICK_TIME);
-  motorStop(KICK_MOTOR);
-  Serial.print("BB_KICKED \n");
+  // Check for duplicates - commands received in the past
+  if (ack_number_pc != ackNo){
+    // Send the acknowledgement again
+    String ack = command;
+    ack += "testing ";
+    ack += ack_number_pc;
+    ack += "\n";
+    
+    Serial.print(ack);
+    Serial.flush();
+    return false;
+  }
+  
+  // If fresh, verify
+  else {
+    return true; 
+  }
+}
+
+void send_ack(String command){
+   // Send acknowledgement
+   String ack = command;
+   ack += " testing";
+   ack += ackNo;
+   ack += "\n"; 
+   Serial.print(ack); 
+   Serial.flush();
+   ackNo++;
+}
+
+void make_kick() { 
+  if(verify_command("BB_KICKED")){
+    if (GRABBER_OPEN==1){
+      send_ack("BB_KICKED");
+      return;
+    }
+    
+    motorBackward(KICK_MOTOR, MAX_SPEED);
+    delay(KICK_TIME);
+    motorStop(KICK_MOTOR);
+    GRABBER_OPEN=0;
+    send_ack("BB_KICKED");
+  }
 }
 
 void open_grabber() {
-  
-  if (GRABBER_OPEN)
-    return;
-  
-  motorBackward(KICK_MOTOR, MAX_SPEED);
-  delay(GRAB_TIME);
-  motorBackward(KICK_MOTOR, OPEN_SPEED);
-  
-  /* Assign state of the grabber */
-  GRABBER_OPEN = 1;
-  Serial.print("BB_OPENED \n");
+  if(verify_command("BB_OPENED")){ 
+    if (GRABBER_OPEN==1){
+      send_ack("BB_OPENED");
+      return;
+    }
+    motorBackward(KICK_MOTOR, MAX_SPEED);
+    delay(GRAB_TIME);
+    motorBackward(KICK_MOTOR, OPEN_SPEED);
+    
+    /* Assign state of the grabber */
+    GRABBER_OPEN = 1;
+    send_ack("BB_OPENED");
+  }
 }
 
 void close_grabber() {
-  motorStop(KICK_MOTOR);
-  motorForward(KICK_MOTOR, MAX_SPEED);
-  delay(CLOSE_TIME);
-  motorForward(KICK_MOTOR, CLOSE_SPEED);
-  
-  /* Assign state of the grabber */
-  GRABBER_OPEN = 0;
-  Serial.print("BB_CLOSED \n");
+  if(verify_command("BB_CLOSED")){
+    motorStop(KICK_MOTOR);
+    motorForward(KICK_MOTOR, MAX_SPEED);
+    delay(CLOSE_TIME);
+    motorStop(KICK_MOTOR);
+    
+    /* Assign state of the grabber */
+    GRABBER_OPEN = 0;
+    send_ack("BB_CLOSED");
+  } 
 }
 
 void make_pause() {
@@ -153,10 +203,13 @@ void make_pause() {
 }
 
 void make_stop() {
-  motorStop(BACK_MOTOR);
-  motorStop(LEFT_MOTOR); 
-  motorStop(RIGHT_MOTOR);
-  Serial.print("BB_STOPPED \n");
+  if(verify_command("BB_STOPPED")){
+    motorStop(BACK_MOTOR);
+    motorStop(LEFT_MOTOR); 
+    motorStop(RIGHT_MOTOR);
+    delay(100);
+    send_ack("BB_STOPPED");
+  }
 }
 
 void invalid_command(const char* command) { }
