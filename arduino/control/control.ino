@@ -125,7 +125,7 @@ bool verify_command(String command){
   if (ack_number_pc != ackNo){
     // Send the acknowledgement again
     String ack = command;
-    ack += "testing ";
+    ack += " ";
     ack += ack_number_pc;
     ack += "\n";
     
@@ -143,7 +143,7 @@ bool verify_command(String command){
 void send_ack(String command){
    // Send acknowledgement
    String ack = command;
-   ack += " testing";
+   ack += " ";
    ack += ackNo;
    ack += "\n"; 
    Serial.print(ack); 
