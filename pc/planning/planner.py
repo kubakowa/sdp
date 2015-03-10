@@ -11,10 +11,10 @@ class Planner:
         self._world.our_defender.catcher_area = {'width' : 32, 'height' : 22, 'front_offset' : 8}
         self._world.our_attacker.catcher_area = {'width' : 32, 'height' : 22, 'front_offset' : 8}
 
-        self._defender_strategies = {'defence'  : [DefenderPenalty],
+        self._defender_strategies = {'defence'  : [DefenderDefend],
                                      'grab'     : [DefenderGrab],
                                      'pass'     : [DefenderPass],
-				     'position' : [DefenderPositionForPass]}
+				     'position' : [DefenderPosition]}
 
         self._defender_state = 'defence'
         self._defender_current_strategy = self.choose_defender_strategy(self._world)
@@ -51,8 +51,7 @@ class Planner:
         ball = self._world.ball
 	
 	# Ball in our zone and not moving fast, so can proceed with grabbing
-	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y): 
-	    #and ball.velocity < BALL_VELOCITY:
+	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and ball.velocity < BALL_VELOCITY:
            
 	   # If we grabbed, switch from grabbing to passing
            if self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
@@ -66,7 +65,6 @@ class Planner:
 
 	   # Switch from pass to grab
            elif self._defender_state == 'pass' and self._defender_current_strategy.current_state == 'FINISHED':
-	      print 'In the pass strategy, but do not have the ball'
               self._defender_state = 'grab'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
@@ -77,10 +75,8 @@ class Planner:
 
 	   return self._defender_current_strategy.generate()
 
-	# Ball in our attacker's zone, need to give them option for a pass
-	# problem that after a pass, ball crosses their attacker's zone so we would switch to defence strategy, but this can
-	# be disabled for the milestone (in real game backwards pass unlikely)
-	elif self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y):
+	# Ball in our attacker's zone or their defender's zone, go to the middle of the zone and align
+	elif self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y) or self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
 	   if not self._defender_state == 'position': 
 	      self._defender_state = 'position' 
 	      self._defender_current_strategy = self.choose_defender_strategy(self._world)
@@ -89,8 +85,6 @@ class Planner:
     
 	# Otherwise, we need to defend as the opposite side have the ball
         else:
-	   return do_nothing()
-  
            if not self._defender_state == 'defence':
 	      self._defender_state = 'defence'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)

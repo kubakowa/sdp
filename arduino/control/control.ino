@@ -3,10 +3,10 @@
 #include <Wire.h>
 
 /* Motors assignment */
-#define LEFT_MOTOR 5
+#define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
-#define BACK_MOTOR 2
-#define KICK_MOTOR 3
+#define BACK_MOTOR 4
+#define KICK_MOTOR 5
 
 /* State */
 int GRABBER_OPEN = 0;

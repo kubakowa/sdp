@@ -307,17 +307,16 @@ def calculate_motor_speed_turn(displacement, angle, backwards_ok=False, careful=
 def do_nothing():
     return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0} 
 
-def adjust_y_position(robot, target_y, side):
-    disp = target_y - robot.y
-    if side == 'right':
-      disp = -disp
-
-    if disp < 0:
-        # move left
-	return {'left_motor': 50, 'right_motor': -50, 'back_motor': 80, 'kicker': 0, 'catcher': 0, 'step': 0, 'stop': 0, 'turn': 0}
+def adjust_y_position(angle):
+    if (abs(angle) < pi/2):
+	speed = 100
+	#factor = 1.4
     else:
-       # move right
-       return {'left_motor': -50, 'right_motor': 50, 'back_motor': -80, 'kicker': 0, 'catcher': 0, 'step': 0, 'stop': 0, 'turn': 0}
+	speed = -100
+	#factor = 1.2
+
+
+    return {'left_motor': speed, 'right_motor': speed, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'stop': 0, 'turn': 0}
 
 def is_aligned(robot_coor, target):
     return abs(target - robot_coor) < DISTANCE_MATCH_THRESHOLD/2    
