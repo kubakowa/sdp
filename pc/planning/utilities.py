@@ -147,8 +147,8 @@ def calculate_motor_speed(displacement, angle):
 	    w = 1
 
 	speeds = get_speeds_vector(x, y, w, factor)
-	left_motor = 1.2 * speeds['left_motor']
-	right_motor = speeds['right_motor'] 
+	left_motor = speeds['left_motor']
+	right_motor = 1.4 * speeds['right_motor'] 
 	back_motor = speeds['back_motor']
 
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 1, 'stop': 0}
@@ -160,7 +160,7 @@ def calculate_motor_speed(displacement, angle):
 	elif displacement > 3 * DISTANCE_MATCH_THRESHOLD:
 	   factor = 0.65
 	else:
-	   factor = 0.5
+	   factor = 0.55
   
 	x = 0
 	y = 1
@@ -168,8 +168,8 @@ def calculate_motor_speed(displacement, angle):
 	
 	speeds = get_speeds_vector(x, y, w, factor)
 
-	left_motor = 1.2 * speeds['left_motor']
-	right_motor = speeds['right_motor'] 
+	left_motor = speeds['left_motor']
+	right_motor = 1.3 * speeds['right_motor'] 
 	
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0}
     else:
