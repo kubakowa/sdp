@@ -129,13 +129,23 @@ def has_matched(robot, x=None, y=None, angle=None,
         angle_matched = abs(angle) < angle_threshold
     return dist_matched and angle_matched
 
-def calculate_motor_speed(displacement, angle):
+def calculate_motor_speed(displacement, angle, backwards_ok=False, full_speed=False): 
+    direction = 1
+
+    if backwards_ok:
+	if abs(angle) > pi/2:
+	    if angle < 0:
+		angle = pi - abs(angle)
+	    else:
+		angle = angle - pi
+	    direction = -1
+
     # need to adjust the angle
     if abs(angle) > ANGLE_MATCH_THRESHOLD:
 	if abs(angle) > pi:  
-	   factor = 0.6
+	   factor = 0.5
 	else:
-	   factor = 0.4
+	   factor = 0.35
 
 	x = 0
 	y = 0
@@ -147,8 +157,8 @@ def calculate_motor_speed(displacement, angle):
 	    w = 1
 
 	speeds = get_speeds_vector(x, y, w, factor)
-	left_motor = speeds['left_motor']
-	right_motor = 1.4 * speeds['right_motor'] 
+	left_motor = 1.2 * speeds['left_motor']
+	right_motor = speeds['right_motor'] 
 	back_motor = speeds['back_motor']
 
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 1, 'stop': 0}
@@ -156,11 +166,11 @@ def calculate_motor_speed(displacement, angle):
 
     if (displacement is not None and displacement > DISTANCE_MATCH_THRESHOLD):
 	if displacement > 4 * DISTANCE_MATCH_THRESHOLD:  
-	   factor = 0.70
+	   factor = 0.6
 	elif displacement > 3 * DISTANCE_MATCH_THRESHOLD:
-	   factor = 0.65
-	else:
 	   factor = 0.55
+	else:
+	   factor = 0.50
   
 	x = 0
 	y = 1
@@ -168,8 +178,13 @@ def calculate_motor_speed(displacement, angle):
 	
 	speeds = get_speeds_vector(x, y, w, factor)
 
-	left_motor = speeds['left_motor']
-	right_motor = 1.3 * speeds['right_motor'] 
+	left_motor = 1.2 * direction * speeds['left_motor']
+	right_motor = direction * speeds['right_motor'] 
+
+	if full_speed:
+	    left_motor = direction * 100
+	    right_motor = direction * 100
+
 	
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0}
     else:

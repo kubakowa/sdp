@@ -209,7 +209,7 @@ class DefenderPass(Strategy):
 	self.att_center_x = (min_x + max_x)/2
 
 
-    # give option for a pass
+    # position to pass
     def position(self):
         disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position(kick=0))
 
@@ -217,7 +217,7 @@ class DefenderPass(Strategy):
             self.current_state = self.ROTATE
             return defender_stop()
         else:
-            return calculate_motor_speed(disp, angle)
+            return calculate_motor_speed(disp, angle, backwards_ok=True)
 
 
     def rotate(self):
@@ -299,15 +299,10 @@ class DefenderGrab(Strategy):
             self.PREPARE: self.prepare,
             self.GO_TO_BALL: self.position,
             self.GRAB_BALL: self.grab,
-            self.GRABBED: self.testing
         }
 
         self.our_defender = self.world.our_defender
         self.ball = self.world.ball
-
-    def testing(self):
-	print 'hello world'
-	return do_nothing()
 
     # make sure the grabber is open
     def prepare(self):
@@ -381,7 +376,7 @@ class DefenderPosition(Strategy):
             self.current_state = self.ROTATE
             return defender_stop()
         else:
-            return calculate_motor_speed(disp, angle)
+            return calculate_motor_speed(disp, angle, backwards_ok=True)
 
 
     def rotate(self):
@@ -403,7 +398,7 @@ class DefenderPosition(Strategy):
             self.current_state = self.READY
             return defender_stop()
         else:
-            return calculate_motor_speed(None, angle)
+            return calculate_motor_speed(None, angle, backwards_ok=True)
 
   
     def ready(self):
@@ -463,15 +458,17 @@ class DefenderDefend(Strategy):
             self.current_state = self.ROTATE
             return defender_stop()
         else:
-            return calculate_motor_speed(disp, angle)
+            return calculate_motor_speed(disp, angle, backwards_ok=True)
 
     def rotate(self):
 	"""
-	Rotate towards the attacker
+	Align to defend
 	"""
 	angle_top = self.our_defender.get_rotation_to_point(self.our_defender.x, self.max_y)
 	angle_bottom = self.our_defender.get_rotation_to_point(self.our_defender.x, self.min_y)
 	
+	self.y_pos = self.max_y
+
 	if abs(angle_top) < abs(angle_bottom):
 	    self.y_pos = self.max_y
 	else:
@@ -483,33 +480,35 @@ class DefenderDefend(Strategy):
             self.current_state = self.DEFEND_GOAL
             return defender_stop()
         else:
-            return calculate_motor_speed(None, angle)
+            return calculate_motor_speed(None, angle, backwards_ok=True)
       
     def defend_goal(self):
         """
-        Block the shot.
+        Block the shot
         """
 
-	# Ball not within the goal range, at the top
+	# ball not within the goal range, at the top
 	if (self.ball.y > self.top_post+10):
 	    disp, angle = self.our_defender.get_direction_to_point(self.our_defender.x, self.top_post)
 	    if has_matched(self.our_defender, x=self.our_defender.x, y=self.top_post):
 		return defender_stop()
 	    else:
-		adjust_y_position(angle)
-
-	if (self.ball.y < self.bottom_post-10):
+		return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
+	
+	#ball not within the goal range, at the bottom
+	elif (self.ball.y < self.bottom_post-10):
 	    disp, angle = self.our_defender.get_direction_to_point(self.our_defender.x, self.bottom_post)
 	    if has_matched(self.our_defender, x=self.our_defender.x, y=self.bottom_post):
 		return defender_stop()
 	    else:
-		adjust_y_position(angle)
+		return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
 	
-	if has_matched(self.our_defender, x=self.our_defender.x, y=self.ball.y):
+	# ball within the goal range
+	elif has_matched(self.our_defender, x=self.our_defender.x, y=self.ball.y):
 	    return defender_stop()
 	else:
 	    disp, angle = self.our_defender.get_direction_to_point(self.our_defender.x, self.ball.y)
-	    return adjust_y_position(angle)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
 	
     def get_alignment_x(self, side):
         """
