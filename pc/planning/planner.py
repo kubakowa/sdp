@@ -18,6 +18,8 @@ class Planner:
 
         self._defender_state = 'defence'
         self._defender_current_strategy = self.choose_defender_strategy(self._world)
+
+	self._time_ball_entered_our_zone = 0
 	
 	generate_speed_coeff_matrix()
 
@@ -49,9 +51,16 @@ class Planner:
         their_defender = self._world.their_defender
         their_attacker = self._world.their_attacker
         ball = self._world.ball
-	
-	# Ball in our zone and not moving fast, so can proceed with grabbing
-	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and ball.velocity < BALL_VELOCITY:
+
+	if not self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
+	    self._time_ball_entered_our_zone = 0
+	else:
+	    if self._time_ball_entered_our_zone == 0:
+		self._time_ball_entered_our_zone = time.clock()
+
+
+	# Ball in our zone for longer than two seconds, so can proceed with grabbing
+	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and time.clock() - self._time_ball_entered_our_zone > 2.0:
            
 	   # If we grabbed, switch from grabbing to passing
            if self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':

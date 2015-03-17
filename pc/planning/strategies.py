@@ -217,8 +217,7 @@ class DefenderPass(Strategy):
             self.current_state = self.ROTATE
             return defender_stop()
         else:
-            return calculate_motor_speed(disp, angle, backwards_ok=True)
-
+            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=True)
 
     def rotate(self):
 	"""
@@ -376,7 +375,7 @@ class DefenderPosition(Strategy):
             self.current_state = self.ROTATE
             return defender_stop()
         else:
-            return calculate_motor_speed(disp, angle, backwards_ok=True)
+            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=True)
 
 
     def rotate(self):
@@ -398,7 +397,7 @@ class DefenderPosition(Strategy):
             self.current_state = self.READY
             return defender_stop()
         else:
-            return calculate_motor_speed(None, angle, backwards_ok=True)
+            return calculate_motor_speed(None, angle, backwards_ok=True, sideways_ok=True)
 
   
     def ready(self):
@@ -423,8 +422,8 @@ class DefenderPosition(Strategy):
 
 class DefenderDefend(Strategy):
 
-    POSITION, ROTATE, DEFEND_GOAL = 'POSITION', 'ROTATE', 'DEFEND_GOAL'
-    STATES = [POSITION, ROTATE, DEFEND_GOAL]
+    POSITION, DEFEND_GOAL = 'POSITION', 'DEFEND_GOAL'
+    STATES = [POSITION, DEFEND_GOAL]
 
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
@@ -436,7 +435,6 @@ class DefenderDefend(Strategy):
  
         self.NEXT_ACTION_MAP = {
 	    self.POSITION: self.position,
-	    self.ROTATE: self.rotate,
             self.DEFEND_GOAL: self.defend_goal
         }
 
@@ -455,33 +453,12 @@ class DefenderDefend(Strategy):
         disp, angle = self.our_defender.get_direction_to_point(goal_front_x, self.center_y)
 
         if has_matched(self.our_defender, x=goal_front_x, y=self.center_y):
-            self.current_state = self.ROTATE
-            return defender_stop()
-        else:
-            return calculate_motor_speed(disp, angle, backwards_ok=True)
-
-    def rotate(self):
-	"""
-	Align to defend
-	"""
-	angle_top = self.our_defender.get_rotation_to_point(self.our_defender.x, self.max_y)
-	angle_bottom = self.our_defender.get_rotation_to_point(self.our_defender.x, self.min_y)
-	
-	self.y_pos = self.max_y
-
-	if abs(angle_top) < abs(angle_bottom):
-	    self.y_pos = self.max_y
-	else:
-	    self.y_pos = self.min_y
-
-	angle = self.our_defender.get_rotation_to_point(self.our_defender.x, self.y_pos)
-
-	if is_facing_target(angle):
             self.current_state = self.DEFEND_GOAL
             return defender_stop()
         else:
-            return calculate_motor_speed(None, angle, backwards_ok=True)
-      
+            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=True)
+
+    
     def defend_goal(self):
         """
         Block the shot
@@ -493,7 +470,7 @@ class DefenderDefend(Strategy):
 	    if has_matched(self.our_defender, x=self.our_defender.x, y=self.top_post):
 		return defender_stop()
 	    else:
-		return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
+		return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, sideways_ok=True)
 	
 	#ball not within the goal range, at the bottom
 	elif (self.ball.y < self.bottom_post-10):
@@ -501,14 +478,14 @@ class DefenderDefend(Strategy):
 	    if has_matched(self.our_defender, x=self.our_defender.x, y=self.bottom_post):
 		return defender_stop()
 	    else:
-		return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
+		return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, sideways_ok=True)
 	
 	# ball within the goal range
 	elif has_matched(self.our_defender, x=self.our_defender.x, y=self.ball.y):
 	    return defender_stop()
 	else:
 	    disp, angle = self.our_defender.get_direction_to_point(self.our_defender.x, self.ball.y)
-	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, sideways_ok=True)
 	
     def get_alignment_x(self, side):
         """

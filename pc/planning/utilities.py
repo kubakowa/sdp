@@ -129,17 +129,35 @@ def has_matched(robot, x=None, y=None, angle=None,
         angle_matched = abs(angle) < angle_threshold
     return dist_matched and angle_matched
 
-def calculate_motor_speed(displacement, angle, backwards_ok=False, full_speed=False): 
-    direction = 1
+def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=False, full_speed=False): 
+    direction = 'forward'
 
-    if backwards_ok:
+    print angle
+
+    if backwards_ok and not sideways_ok:
 	if abs(angle) > pi/2:
 	    if angle < 0:
 		angle = pi - abs(angle)
 	    else:
 		angle = angle - pi
-	    direction = -1
+	    direction = 'backward'
 
+    if sideways_ok:
+	if abs(angle) < pi/4:
+	    direction = 'forward'
+	elif angle < -pi/4 and angle > -3 * pi/4:
+	    angle = angle + pi/2
+	    direction = 'right'
+	elif angle > pi/4 and angle < 3 * pi/4:
+	    angle = angle - pi/2
+	    direction = 'left'
+	else:
+	    if angle < 0:
+		angle = pi - abs(angle)
+	    else:
+		angle = angle - pi
+	    direction = 'backward'
+  
     # need to adjust the angle
     if abs(angle) > ANGLE_MATCH_THRESHOLD:
 	if abs(angle) > pi:  
@@ -172,21 +190,42 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, full_speed=Fa
 	else:
 	   factor = 0.50
   
-	x = 0
-	y = 1
 	w = 0
+
+	if direction == 'forward':
+	    x = 0
+	    y = 1
+	elif direction == 'backward':
+	    x = 0
+	    y = -1
+	elif direction == 'left':
+	    x = -1
+	    y = 0
+	    factor = 1
+	elif direction == 'right':
+	    x = 1
+	    y = 0
+	    factor = 1
 	
 	speeds = get_speeds_vector(x, y, w, factor)
 
-	left_motor = 1.2 * direction * speeds['left_motor']
-	right_motor = direction * speeds['right_motor'] 
+	left_motor  =  speeds['left_motor']
+	right_motor =  speeds['right_motor'] 
+	back_motor  =  speeds['back_motor']
 
-	if full_speed:
-	    left_motor = direction * 100
-	    right_motor = direction * 100
+	if direction in ['forward', 'backward']:
+	    left_motor = 1.2 * left_motor
+
+	if full_speed and direction in ['forward', 'backward']:
+	    if direction == 'forward':
+		left_motor = 100
+		right_motor = 100
+	    else:
+		left_motor = -100
+		right_motor = -100
 
 	
-	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': 0, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0}
+	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0}
     else:
 	return do_nothing()
 
