@@ -15,6 +15,8 @@ int GRABBER_OPEN = 0;
 int KICK_TIME = 1000;
 int GRAB_TIME = 240;
 int CLOSE_TIME = 400;
+int OPEN_TIME = 500;
+
 int MAX_SPEED = 100;
 int OPEN_SPEED = 25;
 int CLOSE_SPEED = 70;
@@ -117,6 +119,9 @@ void make_kick() {
   motorBackward(KICK_MOTOR, MAX_SPEED);
   delay(KICK_TIME);
   motorStop(KICK_MOTOR);
+  
+  /* Assign state of the grabber */
+  GRABBER_OPEN = 0;
   Serial.print("BB_KICKED \n");
 }
 
@@ -125,8 +130,9 @@ void open_grabber() {
   if (GRABBER_OPEN)
     return;
   
+  motorStop(KICK_MOTOR);
   motorBackward(KICK_MOTOR, MAX_SPEED);
-  delay(GRAB_TIME);
+  delay(OPEN_TIME);
   motorBackward(KICK_MOTOR, OPEN_SPEED);
   
   /* Assign state of the grabber */

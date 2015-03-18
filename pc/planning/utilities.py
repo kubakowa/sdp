@@ -188,7 +188,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=F
 	elif displacement > 3 * DISTANCE_MATCH_THRESHOLD:
 	   factor = 0.55
 	else:
-	   factor = 0.50
+	   factor = 0.45
   
 	w = 0
 

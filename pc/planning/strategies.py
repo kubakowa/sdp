@@ -178,8 +178,8 @@ class DefenderPass(Strategy):
     attacker zone.
     '''
 
-    POSITION, ROTATE, SHOOT, FINISHED = 'POSITION', 'ROTATE', 'SHOOT', 'FINISHED'
-    STATES = [POSITION, ROTATE, SHOOT, FINISHED]
+    ROTATE1, POSITION, ROTATE2, SHOOT, FINISHED = 'ROTATE1', 'POSITION', 'ROTATE2', 'SHOOT', 'FINISHED'
+    STATES = [ROTATE1, POSITION, ROTATE2, SHOOT, FINISHED]
 
     UP, DOWN = 'UP', 'DOWN'
 
@@ -188,8 +188,9 @@ class DefenderPass(Strategy):
 
         # Map states into functions
         self.NEXT_ACTION_MAP = {
+	    self.ROTATE1: self.rotate1,
 	    self.POSITION: self.position,
-	    self.ROTATE: self.rotate,
+	    self.ROTATE2: self.rotate2,
             self.SHOOT: self.shoot,
             self.FINISHED: do_nothing
         }
@@ -208,51 +209,34 @@ class DefenderPass(Strategy):
 	min_x, max_x, min_y, max_y  = self.att_zone.boundingBox()
 	self.att_center_x = (min_x + max_x)/2
 
+    def rotate1(self):
+	angle = self.our_defender.get_rotation_to_point(self.att_center_x ,self.our_defender.y)
+
+	if is_facing_target(angle):
+	    self.current_state = self.POSITION;
+	    return defender_stop()
+	else:
+	    return calculate_motor_speed(None, angle)
 
     # position to pass
     def position(self):
-        disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position(kick=0))
+        disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position())
 
-        if has_matched(self.our_defender, x=self.def_center_x, y=self._get_y_position(kick=0)):
-            self.current_state = self.ROTATE
+        if has_matched(self.our_defender, x=self.def_center_x, y=self._get_y_position()):
+            self.current_state = self.ROTATE2
             return defender_stop()
         else:
             return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=True)
 
-    def rotate(self):
-	"""
-	Rotate towards the attacker
-	"""
-	min_x, max_x, min_y, max_y  = self.att_zone.boundingBox()
-	self.lower_quarter_y = (min_y+max_y)/4
-	self.center_y = (min_y+max_y)/2
-	self.upper_quarter_y = 3*(min_y+max_y)/4
-
-	if (self.their_attacker.y < self.lower_quarter_y):
-		PASS_ANGLE = pi/10
-	else:
-		if (self.their_attacker.y < self.center_y):
-			PASS_ANGLE = pi/8
-		else:
-			if (self.their_attacker.y < self.upper_quarter_y):
-				PASS_ANGLE = pi/4
-			else:
-				PASS_ANGLE = pi/6
-
-	our_side = self.world._our_side
-	if our_side == 'left':
-		if (self.their_attacker.y > self.our_defender.y):
-			angle = self.our_defender.get_rotation_to_point(self.att_center_x, self._get_y_position(kick=1))-PASS_ANGLE
-		else:
-			angle = self.our_defender.get_rotation_to_point(self.att_center_x, self._get_y_position(kick=1))+PASS_ANGLE
-	else:
-		angle = self.our_defender.get_rotation_to_point(self.att_center_x, self._get_y_position(kick=1))
+    def rotate2(self):
+	angle = self.our_defender.get_rotation_to_point(self.our_attacker.x ,self.our_attacker.y)
 
 	if is_facing_target(angle):
-            self.current_state = self.SHOOT
-            return grab_ball()
-        else:
-            return calculate_motor_speed(None, angle)
+	    self.current_state = self.SHOOT;
+	    return defender_stop()
+	else:
+	    return calculate_motor_speed(None, angle)
+
 
     def shoot(self):
         """
@@ -262,30 +246,12 @@ class DefenderPass(Strategy):
         self.our_defender.catcher = 'closed'
         return kick_ball()
 
-    def _get_y_position(self, kick):
-	if kick == 0:
-	    offset = 80
-	else:
-	    offset = 160
+    def _get_y_position(self):
+	offset = 80
 	if self.their_attacker.y <= self.center_y:
 	    return self.center_y + offset
 	else:
 	    return self.center_y - offset
-
-    def _get_shooting_coordinates(self, robot):
-        """
-        Retrive the coordinates to which we need to move before we set up the pass.
-        """
-        zone_index = robot.zone
-        zone_poly = self.world.pitch.zones[zone_index][0]
-
-        min_x = int(min(zone_poly, key=lambda z: z[0])[0])
-        max_x = int(max(zone_poly, key=lambda z: z[0])[0])
-
-        x = min_x + (max_x - min_x) / 2
-        y =  self.world.pitch.height / 2
-
-        return (x, y)
 
 class DefenderGrab(Strategy):
 
