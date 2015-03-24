@@ -13,7 +13,6 @@ import threading
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-
 class Controller:
     """
     Primary source of robot control. Ties vision and planning together.
@@ -223,7 +222,6 @@ class Defender_Controller(Robot_Controller):
 
         if kicker == 1:
             try:
-                volatile = 1
                 command = 'BB_KICK\n'
             except StandardError:
                 pass

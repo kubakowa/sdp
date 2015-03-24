@@ -6,6 +6,7 @@ from glob import BallState
 
 class Strategy(object):
 
+    GOAL_ALIGN_OFFSET = 45
     PRECISE_BALL_ANGLE_THRESHOLD = math.pi / 15.0
     UP, DOWN = 'UP', 'DOWN'
 
@@ -110,7 +111,7 @@ class DefenderPass(Strategy):
         Kick.
         """
         self.current_state = self.FINISHED
-        self.our_defender.catcher = 'closed'
+        self.our_defender.catcher = 'open'
         return kick_ball()
 
     def _get_y_position(self):
@@ -171,8 +172,6 @@ class DefenderPosition(Strategy):
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
 
-    GOAL_ALIGN_OFFSET = 35
-
     def __init__(self, world):
         super(DefenderPosition, self).__init__(world, self.STATES)
 
@@ -195,9 +194,12 @@ class DefenderPosition(Strategy):
 
     def prepare(self):
 	self.current_state = self.POSITION
-	self.our_defender.catcher = 'closed'
-	return kick_ball()
-
+	if self.our_defender.catcher == 'closed':
+	    self.our_defender.catcher = 'open'
+	    return kick_ball()
+	else:
+	    return do_nothing()
+	
     def position(self):
 	goal_front_x = self.get_alignment_x(self.world._our_side)
         disp, angle = self.our_defender.get_direction_to_point(goal_front_x, self.center_y)
@@ -257,8 +259,6 @@ class DefenderDefend(Strategy):
 
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
-
-    GOAL_ALIGN_OFFSET = 35
     
     def __init__(self, world):
         super(DefenderDefend, self).__init__(world, self.STATES)
@@ -282,6 +282,10 @@ class DefenderDefend(Strategy):
     def position(self):
 	goal_front_x = self.get_alignment_x(self.world._our_side)
         disp, angle = self.our_defender.get_direction_to_point(goal_front_x, self.center_y)
+
+	if self.our_defender.catcher == 'closed':
+	    self.our_defender.catcher = 'open'
+	    return kick_ball()
 
         if has_matched(self.our_defender, x=goal_front_x, y=self.center_y):
             self.current_state = self.DEFEND_GOAL
