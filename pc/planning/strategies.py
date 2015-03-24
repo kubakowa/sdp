@@ -98,7 +98,6 @@ class DefenderPass(Strategy):
 	else:
 	    angle = self.our_defender.get_rotation_to_point(self.att_center_x ,self.our_defender.y)
 	    
-
 	if is_facing_target(angle):
 	    self.current_state = self.SHOOT;
 	    return defender_stop()

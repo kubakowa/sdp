@@ -60,7 +60,7 @@ class Planner:
 
 
 	# Ball in our zone for longer than two seconds, so can proceed with grabbing
-	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and time.clock() - self._time_ball_entered_our_zone > 1.0:
+	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and time.clock() - self._time_ball_entered_our_zone > 0.8:
            
 	   # If we grabbed, switch from grabbing to passing
            if self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
@@ -94,6 +94,9 @@ class Planner:
     
 	# Otherwise, we need to defend as the opposite side have the ball
         else:
+	   if not self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and not self._world.pitch.zones[their_attacker.zone].isInside(ball.x, ball.y):
+	      return defender_stop()
+
            if not self._defender_state == 'defence':
 	      self._defender_state = 'defence'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)

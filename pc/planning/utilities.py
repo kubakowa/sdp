@@ -215,6 +215,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=F
 
 	if direction in ['forward', 'backward']:
 	  left_motor = COMPANSATION_FACTOR * left_motor
+	  back_motor = 0
 
 	if full_speed and direction in ['forward', 'backward']:
 	    if direction == 'forward':
