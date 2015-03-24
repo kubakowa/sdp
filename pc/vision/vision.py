@@ -9,6 +9,7 @@ import numpy as np
 from findHSV import CalibrationGUI
 import json,ast
 import os
+from glob import BallState
 
 ROBOT_CONST_HEIGHT=15.0
 
@@ -212,9 +213,11 @@ class Vision:
         if (positions[4]['y']==-100 and positions[4]['x']==-100):
             positions[4]['y']=self.old_ball_y
             positions[4]['x']=self.old_ball_x
+	    BallState.lost = True
         else:
             self.old_ball_x=positions[4]['x']
             self.old_ball_y=positions[4]['y']
+	    BallState.lost = False
         
         # terminate processes
         for process in processes:

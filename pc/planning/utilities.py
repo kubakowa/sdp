@@ -21,6 +21,8 @@ ALPHA3 = radians(270)
 
 SPEED_COEFF_MATRIX = np.matrix
 
+COMPANSATION_FACTOR = 1.3
+
 def is_shot_blocked(world, our_robot, their_robot):
     '''
     Checks if our robot could shoot past their robot
@@ -132,8 +134,6 @@ def has_matched(robot, x=None, y=None, angle=None,
 def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=False, full_speed=False): 
     direction = 'forward'
 
-    print angle
-
     if backwards_ok and not sideways_ok:
 	if abs(angle) > pi/2:
 	    if angle < 0:
@@ -175,7 +175,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=F
 	    w = 1
 
 	speeds = get_speeds_vector(x, y, w, factor)
-	left_motor = 1.2 * speeds['left_motor']
+	left_motor = COMPANSATION_FACTOR * speeds['left_motor']
 	right_motor = speeds['right_motor'] 
 	back_motor = speeds['back_motor']
 
@@ -214,7 +214,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=F
 	back_motor  =  speeds['back_motor']
 
 	if direction in ['forward', 'backward']:
-	    left_motor = 1.2 * left_motor
+	  left_motor = COMPANSATION_FACTOR * left_motor
 
 	if full_speed and direction in ['forward', 'backward']:
 	    if direction == 'forward':
@@ -224,7 +224,6 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=F
 		left_motor = -100
 		right_motor = -100
 
-	
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 0, 'stop': 0}
     else:
 	return do_nothing()
