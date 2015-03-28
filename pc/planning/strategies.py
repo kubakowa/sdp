@@ -40,8 +40,8 @@ class DefenderPass(Strategy):
     attacker zone.
     '''
 
-    ROTATE1, POSITION, ROTATE2, SHOOT, FINISHED = 'ROTATE1', 'POSITION', 'ROTATE2', 'SHOOT', 'FINISHED'
-    STATES = [ROTATE1, POSITION, ROTATE2, SHOOT, FINISHED]
+    ROTATE, POSITION, CHECK, SHOOT, FINISHED = 'ROTATE', 'POSITION', 'CHECK', 'SHOOT', 'FINISHED'
+    STATES = [ROTATE, POSITION, CHECK, SHOOT, FINISHED]
 
     UP, DOWN = 'UP', 'DOWN'
 
@@ -50,9 +50,9 @@ class DefenderPass(Strategy):
 
         # Map states into functions
         self.NEXT_ACTION_MAP = {
-	    self.ROTATE1: self.rotate1,
+	    self.ROTATE: self.rotate,
 	    self.POSITION: self.position,
-	    self.ROTATE2: self.rotate2,
+	    self.CHECK: self.check,
             self.SHOOT: self.shoot,
             self.FINISHED: do_nothing
         }
@@ -71,7 +71,9 @@ class DefenderPass(Strategy):
 	min_x, max_x, min_y, max_y  = self.att_zone.boundingBox()
 	self.att_center_x = (min_x + max_x)/2
 
-    def rotate1(self):
+	self.pass_y_position = self._get_y_position()
+
+    def rotate(self):
 	angle = self.our_defender.get_rotation_to_point(self.att_center_x ,self.our_defender.y)
 
 	if is_facing_target(angle):
@@ -82,20 +84,21 @@ class DefenderPass(Strategy):
 
     # position to pass
     def position(self):
-        disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self._get_y_position())
+        disp, angle = self.our_defender.get_direction_to_point(self.def_center_x, self.pass_y_position)
 
-        if has_matched(self.our_defender, x=self.def_center_x, y=self._get_y_position()):
-            self.current_state = self.ROTATE2
+        if has_matched(self.our_defender, x=self.def_center_x, y=self.pass_y_position):
+            self.current_state = self.CHECK
             return defender_stop()
         else:
             return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=True)
 
-    def rotate2(self):
-	
+    def check(self):
 	# Blocked, avoid the attacker
 	if has_matched(self.our_defender, x=self.our_defender.x, y=self.their_attacker.y):
-	    angle = self.our_defender.get_rotation_to_point(self.att_center_x ,self.center_y)
-	# Not blocked, shot straight
+	    self.pass_y_position = self._get_y_position()
+	    self.current_state = self.ROTATE
+	    return defender_stop()
+	# Not blocked, shoot
 	else:
 	    angle = self.our_defender.get_rotation_to_point(self.att_center_x ,self.our_defender.y)
 	    
@@ -154,16 +157,19 @@ class DefenderGrab(Strategy):
 
     # grab the ball
     def grab(self):
-        if self.our_defender.has_ball(self.ball):
+        if self.our_defender.has_ball(self.ball) or BallState.lost:
             self.current_state = self.GRABBED
             return defender_stop()
         else:
-            if self.our_defender.can_catch_ball(self.ball):
-                self.our_defender.catcher = 'closed'
-                return grab_ball()
-            else:
-            	self.current_state = self.PREPARE
-                return defender_stop()
+	    self.our_defender.catcher = 'closed'
+	    self.current_state = self.GRABBED
+	    return grab_ball()
+            #if self.our_defender.can_catch_ball(self.ball):
+            #    self.our_defender.catcher = 'closed'
+            #    return grab_ball()
+            #else:
+            #	self.current_state = self.PREPARE
+            #   return defender_stop()
        
 class DefenderPosition(Strategy):
 

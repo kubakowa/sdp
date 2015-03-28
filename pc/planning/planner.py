@@ -3,6 +3,7 @@ from models import *
 from collisions import *
 from strategies import *
 from utilities import *
+from glob import BallState
 
 class Planner:
 
@@ -58,9 +59,8 @@ class Planner:
 	    if self._time_ball_entered_our_zone == 0:
 		self._time_ball_entered_our_zone = time.clock()
 
-
 	# Ball in our zone for longer than two seconds, so can proceed with grabbing
-	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and time.clock() - self._time_ball_entered_our_zone > 0.8:
+	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and time.clock() - self._time_ball_entered_our_zone > 0.5:
            
 	   # If we grabbed, switch from grabbing to passing
            if self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
@@ -72,9 +72,14 @@ class Planner:
 	      self._defender_state = 'grab'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
-	   # Switch from pass to grab
+	   # Switch from pass to grab as finished with the pass
            elif self._defender_state == 'pass' and self._defender_current_strategy.current_state == 'FINISHED':
               self._defender_state = 'grab'
+              self._defender_current_strategy = self.choose_defender_strategy(self._world)
+  
+	   # Switch from pass to grab because ball was missed
+	   elif self._defender_state == 'pass' and not BallState.lost and not has_matched(our_defender, x=ball.x, y=ball.y, distance_threshold=40):
+	      self._defender_state = 'grab'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
 	   # Switch from position to grab
