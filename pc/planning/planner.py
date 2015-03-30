@@ -79,7 +79,7 @@ class Planner:
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
   
 	   # Switch from pass to grab because ball was missed
-	   elif self._defender_state == 'pass' and not BallState.lost and not has_matched(our_defender, x=ball.x, y=ball.y, distance_threshold=40):
+	   elif self._defender_state == 'pass' and not BallState.lost and not has_matched(our_defender, x=ball.x, y=ball.y, distance_threshold=45):
 	      self._defender_state = 'grab'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
