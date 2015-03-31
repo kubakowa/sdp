@@ -59,6 +59,7 @@ class DefenderDefend(Strategy):
 	def_zone = self.world._pitch._zones[self.world.our_defender.zone]
 	min_x, max_x, self.min_y, self.max_y  = def_zone.boundingBox()
 	self.center_y = (self.min_y + self.max_y)/2
+	self.center_x = (min_x + max_x)/2
 
 	self.top_post = self.center_y + 50
 	self.bottom_post = self.center_y - 50
@@ -69,6 +70,8 @@ class DefenderDefend(Strategy):
 	self.distance = 10
 
     def prepare(self):
+	sideways_safe = self._sideways_safe(self.world._our_side)
+
 	front_x = self._get_alignment_x(self.world._our_side, 20)
 
         disp, angle = self.our_defender.get_direction_to_point(front_x, self.center_y)
@@ -87,7 +90,7 @@ class DefenderDefend(Strategy):
 		self.current_state = self.TRACK_BALL
             return defender_stop()
         else:
-            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=True)
+            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=sideways_safe)
 
     def track_ball(self):
 	if BallState.lost:
@@ -199,6 +202,13 @@ class DefenderDefend(Strategy):
     def _confuse(self):
 	return BallState.lost or has_matched(self.their_attacker, x=self.ball.x, y=self.ball.y, distance_threshold=40)
 
+    def _sideways_safe(self, side):
+	assert side in self.SIDES
+        if side == self.LEFT:
+            return self.our_defender.x < self.center_x
+        else:
+            return self.our_defender.x > self.center_x
+
 class DefenderGrab(Strategy):
 
     PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED = 'PREPARE', 'GO_TO_BALL', 'GRAB_BALL', 'GRABBED'
@@ -270,9 +280,10 @@ class DefenderPass(Strategy):
         self.our_defender = self.world.our_defender
 	self.our_attacker = self.world.our_attacker
 	self.their_attacker = self.world.their_attacker
-
+      
 	def_zone = self.world._pitch._zones[self.world.our_defender.zone]
 	self.att_zone = self.world._pitch._zones[self.world.our_attacker.zone]
+	opp_zone = self.world._pitch._zones[self.world.their_attacker.zone]
 
 	min_x, max_x, min_y, max_y  = def_zone.boundingBox()
 	self.def_center_x = (min_x + max_x)/2
@@ -281,8 +292,14 @@ class DefenderPass(Strategy):
 	min_x, max_x, min_y, max_y  = self.att_zone.boundingBox()
 	self.att_center_x = (min_x + max_x)/2
 
+	min_x, max_x, self.min_y, self.max_y  = opp_zone.boundingBox()
+	self.opp_center_y = (min_y + max_y)/2
+	self.opp_center_x = (min_x + max_x)/2
+
 	self.pass_y_position = self._get_y_position()
 	self.pass_x_position = self.def_center_x
+
+	self.counter = 0
 
     def rotate(self):
 	angle = self.our_defender.get_rotation_to_point(self.att_center_x ,self.our_defender.y)
@@ -303,19 +320,33 @@ class DefenderPass(Strategy):
             return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=True)
 
     def check(self):
-	# blocked, avoid the attacker
-	if has_matched(self.our_defender, x=self.our_defender.x, y=self.their_attacker.y):
+	self.counter = self.counter + 1
+
+	# blocked and no timeout
+	if has_matched(self.our_defender, x=self.our_defender.x, y=self.their_attacker.y, distance_threshold=40) and self.counter <= 2:
 	    self.pass_y_position = self._get_y_position()
 	    self.current_state = self.ROTATE
 	    return defender_stop()
-	# not blocked, shoot
-	else:
-	    offset = 20
-	    if self.pass_y_position > self.center_y:
-		angle = self.our_defender.get_rotation_to_point(self.att_center_x ,self.pass_y_position + offset)
+
+	# blocked and timeout
+	elif has_matched(self.our_defender, x=self.our_defender.x, y=self.their_attacker.y, distance_threshold=40):
+	    if self.world._our_side == 'left':
+		target_x = self.opp_center_x + 20
 	    else:
-		angle = self.our_defender.get_rotation_to_point(self.att_center_x ,self.pass_y_position - offset)
-	    
+		target_x = self.opp_center_x - 20
+
+	    if self.pass_y_position > self.center_y:
+		target_y = self.max_y
+	    else:
+		target_y = self.min_y
+
+	# clear shot
+	else:
+	    target_x = self.att_center_x
+	    target_y = self.pass_y_position
+	
+	angle = self.our_defender.get_rotation_to_point(target_x, target_y)
+
 	if is_facing_target(angle):
 	    self.current_state = self.SHOOT;
 	    return defender_stop()
@@ -357,9 +388,9 @@ class DefenderPosition(Strategy):
 	self.their_attacker = self.world.their_attacker
 
 	def_zone = self.world._pitch._zones[self.world.our_defender.zone]
-
 	min_x, max_x, self.min_y, self.max_y  = def_zone.boundingBox()
 	self.center_y = (self.min_y + self.max_y)/2
+	self.center_x = (min_x + max_x)/2
 
     def prepare(self):
         self.current_state = self.POSITION
@@ -371,6 +402,8 @@ class DefenderPosition(Strategy):
 	    return defender_stop()
 	
     def position(self):
+	sideways_safe = self._sideways_safe(self.world._our_side)
+
 	goal_front_x = self.get_alignment_x(self.world._our_side)
         disp, angle = self.our_defender.get_direction_to_point(goal_front_x, self.center_y)
 
@@ -378,7 +411,7 @@ class DefenderPosition(Strategy):
             self.current_state = self.ROTATE
             return defender_stop()
         else:
-            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=True)
+            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=sideways_safe)
 
 
     def rotate(self):
@@ -412,6 +445,13 @@ class DefenderPosition(Strategy):
             return self.world.our_goal.x + self.GOAL_ALIGN_OFFSET
         else:
             return self.world.our_goal.x - self.GOAL_ALIGN_OFFSET
+
+    def _sideways_safe(self, side):
+	assert side in self.SIDES
+        if side == self.LEFT:
+            return self.our_defender.x < self.center_x
+        else:
+            return self.our_defender.x > self.center_x
 
 ###########################################################################
 # END OF USED DEFENDER STRATEGIES

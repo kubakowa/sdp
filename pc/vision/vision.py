@@ -204,7 +204,7 @@ class Vision:
         # Start processes
         for process in processes:
             process.start()
-)
+
         # Find robots and ball, use queue to
         # avoid deadlock and share resources
 	positions=[]
