@@ -101,7 +101,7 @@ def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce
 # right motor - right motor speed
 # back motor - back motor speed
 # kicker - 1 for kick, 0 otherwise 
-# catcher - 1 for open, 2 for close, 0 otherwise
+# catcher - 1 for open, 2 for close, 3 for release, 0 otherwise
 # step - 1 for stepping enable, 0 otherwise
 # turn - 1 for turning, 0 otherwise
 # stop - 1 for stopping all movements, 0 otherwise
@@ -115,6 +115,9 @@ def kick_ball():
 
 def open_catcher():
     return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 1, 'step': 0, 'turn': 0, 'stop': 0}
+
+def release_catcher():
+    return {'left_motor': 0, 'right_motor': 0, 'back_motor': 0, 'kicker': 0, 'catcher': 3, 'step': 0, 'turn': 0, 'stop': 0}
 
 # not using this
 def turn_shoot(orientation):

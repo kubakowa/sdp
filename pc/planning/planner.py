@@ -13,7 +13,6 @@ class Planner:
         self._world.our_attacker.catcher_area = {'width' : 26, 'height' : 24, 'front_offset' : 10}
 
         self._defender_strategies = {'defence'  : [DefenderDefend],
-				     'confuse'  : [DefenderConfuse],
                                      'grab'     : [DefenderGrab],
                                      'pass'     : [DefenderPass],
 				     'position' : [DefenderPosition]}
@@ -60,7 +59,7 @@ class Planner:
 	    if self._time_ball_entered_our_zone == 0:
 		self._time_ball_entered_our_zone = time.clock()
 
-	# Ball in our zone for longer than two seconds, so can proceed with grabbing
+	# Ball in our zone for longer than 0.5s, so can proceed with grabbing
 	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and time.clock() - self._time_ball_entered_our_zone > 0.5:
            
 	   # If we grabbed, switch from grabbing to passing
@@ -87,11 +86,6 @@ class Planner:
 	   elif self._defender_state == 'position':
 	      self._defender_state = 'grab'
 	      self._defender_current_strategy = self.choose_defender_strategy(self._world)
-
-	   # Switch from confuse to grab
-	   elif self._defender_state == 'confuse':
-	      self._defender_state = 'grab'
-	      self._defender_current_strategy = self.choose_defender_strategy(self._world)
 	  
 	   return self._defender_current_strategy.generate()
 
@@ -107,12 +101,11 @@ class Planner:
         else:
 	   if not self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and not self._world.pitch.zones[their_attacker.zone].isInside(ball.x, ball.y):
 	      return defender_stop()
+	  
+	   if self._defender_state == 'pass' and not BallState.lost and has_matched(our_defender, x=ball.x, y=ball.y):
+	      disp, angle = our_defender.get_direction_to_point(self._world.our_goal.x, our_defender.y)
+	      return calculate_motor_speed(disp, angle, backwards_ok=True)
 
-	   if BallState.lost or has_matched(their_attacker, x=ball.x, y=ball.y):
-	      if not self._defender_state == 'confuse':
-		  self._defender_state = 'confuse'
-		  self._defender_current_strategy = self.choose_defender_strategy(self._world)
-    
            elif not self._defender_state == 'defence':
 	      self._defender_state = 'defence'
               self._defender_current_strategy = self.choose_defender_strategy(self._world)
