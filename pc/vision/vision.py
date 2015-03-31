@@ -104,16 +104,15 @@ class Vision:
             [5-tuple] Location of the robots and the ball
         """
         # Run trackers as processes
-        positions = self._run_trackers(frame)
+	positions = self._run_trackers(frame)
         # Correct for perspective
         positions = self.get_adjusted_positions(positions)
-
         # Wrap list of positions into a dictionary
+
         keys = ['our_defender', 'our_attacker', 'their_defender', 'their_attacker', 'ball']
         regular_positions = dict()
         for i, key in enumerate(keys):
             regular_positions[key] = positions[i]
-
         # Error check we got a frame
         height, width, channels = frame.shape if frame is not None else (None, None, None)
 
@@ -195,8 +194,8 @@ class Vision:
         Returns:
             [5-tuple] positions     - locations of the robots and the ball
         """
-        queues = [Queue() for i in range(5)]
-        objects = [self.us[0], self.us[1], self.opponents[0], self.opponents[1], self.ball_tracker]
+        queues = [Queue() for i in range(3)]
+        objects = [self.us[0], self.opponents[1], self.ball_tracker]
 
         # Define processes
         processes = [
@@ -205,11 +204,21 @@ class Vision:
         # Start processes
         for process in processes:
             process.start()
-
+)
         # Find robots and ball, use queue to
         # avoid deadlock and share resources
-        positions = [q.get() for q in queues]
+	positions=[]
+	y=0
+	for x in range(0, 5):
 
+	  if(x==1):
+	    positions.append({'box': None, 'direction': None, 'angle': None, 'name': 'Our Attacker', 'y': None, 'front': None, 'x': None, 'dot': None})
+	  elif(x==2):
+	    positions.append({'box': [(453, 210), (449, 179), (460, 178), (464, 209)], 'direction': None, 'angle': None, 'name': 'Their Defender', 'y': 194, 'front': None, 'x': 456, 'dot': None})
+	  else:
+	    positions.append(queues[y].get())  
+	    y+=1
+	    
         if (positions[4]['y']==-100 and positions[4]['x']==-100):
             positions[4]['y']=self.old_ball_y
             positions[4]['x']=self.old_ball_x
@@ -222,7 +231,8 @@ class Vision:
         # terminate processes
         for process in processes:
             process.join()
-
+	#positions=[{'box': [(96, 173), (65, 169), (70, 135), (101, 140)], 'direction': (Center(x=98, y=156), Center(x=67, y=152)), 'angle': 6.1548620794937916, 'name': 'Our Defender', 'y': 154, 'front': [(101, 140), (96, 173)], 'x': 83, 'dot': Center(x=78.0, y=155.0)}, {'box': None, 'direction': None, 'angle': None, 'name': 'Our Attacker', 'y': None, 'front': None, 'x': None, 'dot': None}, {'box': [(453, 210), (449, 179), (460, 178), (464, 209)], 'direction': None, 'angle': None, 'name': 'Their Defender', 'y': 194, 'front': None, 'x': 456, 'dot': None}, {'box': None, 'direction': None, 'angle': None, 'name': 'Their Attacker', 'y': None, 'front': None, 'x': None, 'dot': None}, {'y': 7.5, 'x': 410.5, 'angle': None, 'name': 'ball', 'velocity': None}]  
+	
         return positions
 
     def to_info(self, args, height):
