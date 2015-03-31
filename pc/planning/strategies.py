@@ -210,6 +210,7 @@ class DefenderGrab(Strategy):
             self.PREPARE: self.prepare,
             self.GO_TO_BALL: self.position,
             self.GRAB_BALL: self.grab,
+	    self.GRABBED: do_nothing
         }
 
         self.our_defender = self.world.our_defender
@@ -242,6 +243,7 @@ class DefenderGrab(Strategy):
             #else:
             #	self.current_state = self.PREPARE
             #   return defender_stop()
+
 
 class DefenderPass(Strategy):
 
