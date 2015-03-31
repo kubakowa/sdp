@@ -211,7 +211,7 @@ class Robot(PitchObject):
 
     @catcher.setter
     def catcher(self, new_position):
-        assert new_position in ['open', 'closed']
+        assert new_position in ['open', 'closed', 'released']
         self._catcher = new_position
 
     def can_catch_ball(self, ball):

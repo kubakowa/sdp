@@ -191,8 +191,11 @@ class Defender_Controller(Robot_Controller):
 	step = int(action['step'])
 	stop = int(action['stop'])
 	
-	# kick, open and close are volatile commands
+	# open and close are volatile commands
 	volatile = 0
+	
+	# open is crucial command
+	crucial = 0
         
 	#if left_motor==-right_motor:
 	#  # turning
@@ -228,6 +231,7 @@ class Defender_Controller(Robot_Controller):
         elif catcher == 1:
             try:
                 volatile = 1
+		crucial = 1
                 command = 'BB_OPEN\n'
             except StandardError:
                 pass
@@ -239,6 +243,12 @@ class Defender_Controller(Robot_Controller):
             except StandardError:
                 pass
 
+	elif catcher == 3:
+            try:
+                command = 'BB_RELEASE\n'
+            except StandardError:
+                pass
+
 	if volatile:
 	    comm.write(command)
 	    time.sleep(0.2)
@@ -247,6 +257,17 @@ class Defender_Controller(Robot_Controller):
 	    comm.write(command)
 	    time.sleep(0.2)
 	    comm.write(command)
+
+	if crucial:
+	    time.sleep(0.2)
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
+	    time.sleep(0.2)
+	    comm.write(command)
+
 	
 #Commands we need to make sure get executed.
 #        if volatile:

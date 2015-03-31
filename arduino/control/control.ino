@@ -16,6 +16,8 @@ int KICK_TIME = 1000;
 int GRAB_TIME = 240;
 int CLOSE_TIME = 400;
 int OPEN_TIME = 500;
+int RELEASE_DOWN_TIME = 175;
+int RELEASE_UP_TIME = 400;
 
 int MAX_SPEED = 100;
 int OPEN_SPEED = 25;
@@ -32,6 +34,7 @@ void setupCommands() {
   comm.addCommand("BB_STOP", make_stop);
   comm.addCommand("BB_PAUSE", make_pause);
   comm.addCommand("BB_STEP", make_incremental_move);
+  comm.addCommand("BB_RELEASE", release_grabber);
 } 
 
 void setup(){
@@ -164,6 +167,26 @@ void make_stop() {
   motorStop(RIGHT_MOTOR);
   Serial.print("BB_STOPPED \n");
 }
+
+void release_grabber() {
+  motorStop(KICK_MOTOR);
+  
+  if (GRABBER_OPEN) {
+    motorForward(KICK_MOTOR, MAX_SPEED);
+    delay(RELEASE_DOWN_TIME);
+    motorStop(KICK_MOTOR);
+  } 
+  else {
+    motorBackward(KICK_MOTOR, MAX_SPEED);
+    delay(RELEASE_UP_TIME);
+    motorStop(KICK_MOTOR);
+  }
+  
+  GRABBER_OPEN = 0;
+}
+    
+      
+    
 
 void invalid_command(const char* command) { }
 

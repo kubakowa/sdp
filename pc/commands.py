@@ -57,7 +57,7 @@ if __name__ == "__main__":
     generate_speed_coeff_matrix()
     comms = Arduino('/dev/ttyACM0', 115200, 1, 1)
     while (1):
-        command = raw_input('Name your command (w, s, a, d, k, o, c, q, clock, anti, wa, wd, sa, sd)')
+        command = raw_input('Name your command (r, w, s, a, d, k, o, c, q, clock, anti, wa, wd, sa, sd)')
         #command = 'BB_MOVE %d %d %d\n' %(speeds[0], speeds[1], speeds[2])
         
 	if command == 'wa':
@@ -116,6 +116,9 @@ if __name__ == "__main__":
         
         elif command == 'c':
             comm = 'BB_CLOSE\n'
+
+	elif command == 'r':
+	    comm = 'BB_RELEASE\n'
             
         else:
             print('You fool, unknown command :/')
