@@ -9,15 +9,15 @@ class Planner:
 
     def __init__(self, our_side, pitch_num):
         self._world = World(our_side, pitch_num)
-        self._world.our_defender.catcher_area = {'width' : 26, 'height' : 24, 'front_offset' : 10}
-        self._world.our_attacker.catcher_area = {'width' : 26, 'height' : 24, 'front_offset' : 10}
+        self._world.our_defender.catcher_area = {'width' : 24, 'height' : 24, 'front_offset' : 10}
+        self._world.our_attacker.catcher_area = {'width' : 24, 'height' : 24, 'front_offset' : 10}
 
         self._defender_strategies = {'defence'  : [DefenderDefend],
                                      'grab'     : [DefenderGrab],
                                      'pass'     : [DefenderPass],
 				     'position' : [DefenderPosition]}
 
-        self._defender_state = 'defence'
+        self._defender_state = 'grab'
         self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
 	self._time_ball_entered_our_zone = 0
@@ -52,16 +52,17 @@ class Planner:
         their_defender = self._world.their_defender
         their_attacker = self._world.their_attacker
         ball = self._world.ball
+	print 
 
 	if not self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
 	    self._time_ball_entered_our_zone = 0
+
 	else:
 	    if self._time_ball_entered_our_zone == 0:
 		self._time_ball_entered_our_zone = time.clock()
 
 	# Ball in our zone for longer than 0.5s, so can proceed with grabbing
 	if self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) and time.clock() - self._time_ball_entered_our_zone > 0.5:
-           
 	   # If we grabbed, switch from grabbing to passing
            if self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
 	      self._defender_state = 'pass'
@@ -105,6 +106,9 @@ class Planner:
 	   if self._defender_state == 'pass' and not BallState.lost and has_matched(our_defender, x=ball.x, y=ball.y):
 	      disp, angle = our_defender.get_direction_to_point(self._world.our_goal.x, our_defender.y)
 	      return calculate_motor_speed(disp, angle, backwards_ok=True)
+
+	   if self._defender_state == 'grab' and self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
+	      return self._defender_current_strategy.generate()
 
            elif not self._defender_state == 'defence':
 	      self._defender_state = 'defence'
