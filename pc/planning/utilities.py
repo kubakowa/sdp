@@ -131,7 +131,7 @@ def has_matched(robot, x=None, y=None, angle=None,
         angle_matched = abs(angle) < angle_threshold
     return dist_matched and angle_matched
 
-def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=False, full_speed=False): 
+def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=False, full_speed=False, distance_threshold=DISTANCE_MATCH_THRESHOLD): 
     direction = 'forward'
 
     if backwards_ok and not sideways_ok:
@@ -182,10 +182,10 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, sideways_ok=F
 	return {'left_motor': left_motor, 'right_motor': right_motor, 'back_motor': back_motor, 'kicker': 0, 'catcher': 0, 'step': 0, 'turn': 1, 'stop': 0}
     # need to adjust distance
 
-    if (displacement is not None and displacement > DISTANCE_MATCH_THRESHOLD):
-	if displacement > 4 * DISTANCE_MATCH_THRESHOLD:  
+    if (displacement is not None and displacement > distance_threshold):
+	if displacement > 4 * distance_threshold:  
 	   factor = 0.6
-	elif displacement > 3 * DISTANCE_MATCH_THRESHOLD:
+	elif displacement > 3 * distance_threshold:
 	   factor = 0.55
 	else:
 	   factor = 0.45
