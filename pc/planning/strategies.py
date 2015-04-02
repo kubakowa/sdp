@@ -72,9 +72,9 @@ class DefenderDefend(Strategy):
     def prepare(self):
 	sideways_safe = self._sideways_safe(self.world._our_side)
 
-	front_x = self._get_alignment_x(self.world._our_side, 20)
+	track_y = self._get_y_within_goal_range(self.ball.y)
 
-        disp, angle = self.our_defender.get_direction_to_point(front_x, self.center_y)
+        disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
 
 	if self.our_defender.catcher == 'closed':
 	    self.our_defender.catcher = 'released'
@@ -83,14 +83,14 @@ class DefenderDefend(Strategy):
 	    self.our_defender.catcher = 'released'
 	    return release_catcher()
 
-        if has_matched(self.our_defender, x=front_x, y=self.center_y):
+        if has_matched(self.our_defender, x=self.goal_front_x, y=track_y):
 	    if self._confuse():
 		self.current_state = self.ALIGN
 	    else:
 		self.current_state = self.TRACK_BALL
             return defender_stop()
         else:
-            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=sideways_safe)
+            return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=sideways_safe, full_speed=True)
 
     def track_ball(self):
 	if BallState.lost:
@@ -200,7 +200,7 @@ class DefenderDefend(Strategy):
             return self.world.our_goal.x - self.GOAL_ALIGN_OFFSET - offset
 
     def _confuse(self):
-	return BallState.lost or has_matched(self.their_attacker, x=self.ball.x, y=self.ball.y, distance_threshold=40)
+	return BallState.lost or has_matched(self.their_attacker, x=self.ball.x, y=self.ball.y, distance_threshold=35)
 
     def _sideways_safe(self, side):
 	assert side in self.SIDES
@@ -392,6 +392,13 @@ class DefenderPosition(Strategy):
 	self.center_y = (self.min_y + self.max_y)/2
 	self.center_x = (min_x + max_x)/2
 
+	self.top_post = self.center_y + 50
+	self.bottom_post = self.center_y - 50
+
+	self.ball = self.world.ball
+
+	self.goal_front_x = self.get_alignment_x(self.world._our_side)
+
     def prepare(self):
         self.current_state = self.POSITION
 
@@ -403,11 +410,11 @@ class DefenderPosition(Strategy):
 	
     def position(self):
 	sideways_safe = self._sideways_safe(self.world._our_side)
+	track_y = self._get_y_within_goal_range(self.ball.y)
 
-	goal_front_x = self.get_alignment_x(self.world._our_side)
-        disp, angle = self.our_defender.get_direction_to_point(goal_front_x, self.center_y)
+        disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
 
-        if has_matched(self.our_defender, x=goal_front_x, y=self.center_y):
+        if has_matched(self.our_defender, x=self.goal_front_x, y=track_y):
             self.current_state = self.ROTATE
             return defender_stop()
         else:
@@ -433,11 +440,16 @@ class DefenderPosition(Strategy):
 
   
     def ready(self):
-	angle = self.our_defender.get_rotation_to_point(self.our_defender.x, self.y_pos)
+	track_y = self._get_y_within_goal_range(self.ball.y)
 
-	if not is_facing_target(angle):
-            self.current_state = self.ROTATE
-	return do_nothing()
+	disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
+	sideways_safe = self._sideways_safe(self.world._our_side)
+
+	if has_matched(self.our_defender, x=self.goal_front_x, y=track_y):
+	    return defender_stop()
+	else:
+	    self.current_state = self.POSITION
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, sideways_ok=sideways_safe)
 
     def get_alignment_x(self, side):
         assert side in self.SIDES
@@ -453,54 +465,193 @@ class DefenderPosition(Strategy):
         else:
             return self.our_defender.x > self.center_x
 
-###########################################################################
-# END OF USED DEFENDER STRATEGIES
-###########################################################################
+    def _get_y_within_goal_range(self, y, offset=0):
+	if y > self.top_post - offset:
+	    return self.top_post - offset 
+	elif y < self.bottom_post + offset:
+	    return self.bottom_post + offset
+	else:
+	    return y
+
+## PENALTY STRATEGY ##
 
 class DefenderPenalty(Strategy):
 
-    PREPARE, DEFEND_GOAL = 'PREPARE', 'DEFEND_GOAL'
-    STATES = [PREPARE, DEFEND_GOAL]
+    PREPARE, TRACK_BALL, ALIGN, UP, DOWN  = 'PENALTY_PREPARE', 'PENALTY_TRACK_BALL' ,'PENALTY_ALIGN', 'PENALTY_UP', 'PENALTY_DOWN' 
+    STATES = [PREPARE, TRACK_BALL, ALIGN, UP, DOWN]
+
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
-
+    
     def __init__(self, world):
         super(DefenderPenalty, self).__init__(world, self.STATES)
-
+ 
         self.NEXT_ACTION_MAP = {
 	    self.PREPARE: self.prepare,
-            self.DEFEND_GOAL: self.defend_goal
+            self.TRACK_BALL: self.track_ball,
+	    self.ALIGN: self.align,
+	    self.UP: self.up,
+	    self.DOWN: self.down
         }
 
-        self.their_attacker = self.world.their_attacker
-        self.our_defender = self.world.our_defender
         self.ball = self.world.ball
-    
+	self.our_defender = self.world.our_defender
+	self.their_attacker = self.world.their_attacker
+	
+	def_zone = self.world._pitch._zones[self.world.our_defender.zone]
+	min_x, max_x, self.min_y, self.max_y  = def_zone.boundingBox()
+	self.center_y = (self.min_y + self.max_y)/2
+	self.center_x = (min_x + max_x)/2
+
+	self.top_post = self.center_y + 50
+	self.bottom_post = self.center_y - 50
+
+	self.goal_front_x = self._get_alignment_x(self.world._our_side, -10)
+	self.counter = 0
+	self.threshold = 10
+	self.distance = 10
+
     def prepare(self):
-        self.current_state = self.DEFEND_GOAL
-        if self.our_defender.catcher == 'closed':
-            self.our_defender.catcher = 'open'
-	    return open_catcher()
-        else:
-            return do_nothing()
-  
-    def defend_goal(self):
-        """
-        Wait until the ball is fired, then try to block it.
-        """
-        # Predict where they are aiming.
-	if self.ball.velocity <= BALL_VELOCITY: 
-            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=False)
-            return do_nothing()
+	track_y = self._get_y_within_goal_range(self.ball.y)
 
-	# Predict where the ball is moving and try to block it.
-        elif self.ball.velocity > BALL_VELOCITY:
-            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=False)
+        disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
 
-            if (is_aligned(predicted_y, self.our_defender.y)):
-                return defender_stop();
+	if self.our_defender.catcher == 'closed':
+	    self.our_defender.catcher = 'released'
+	    return kick_ball()
+	elif self.our_defender.catcher == 'open':
+	    self.our_defender.catcher = 'released'
+	    return release_catcher()
+
+        if has_matched(self.our_defender, x=self.goal_front_x, y=track_y):
+	    if self._confuse():
+		self.current_state = self.ALIGN
 	    else:
-            	return adjust_y_position(self.our_defender, predicted_y, self.world._our_side)
+		self.current_state = self.TRACK_BALL
+            return defender_stop()
+        else:
+            return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
+
+    def track_ball(self):
+	if BallState.lost:
+	    track_y = self.their_attacker.y
+	else:
+	    track_y = self.ball.y
+
+	if self._confuse():
+	    self.current_state = self.ALIGN
+	    
+	# ball not within the goal range, at the top
+	if (track_y > self.top_post+10):
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, self.top_post)
+	    if has_matched(self.our_defender, x=self.goal_front_x, y=self.top_post):
+		return defender_stop()
+	    else:
+		return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
+	
+	# ball not within the goal range, at the bottom
+	elif (track_y < self.bottom_post-10):
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, self.bottom_post)
+	    if has_matched(self.our_defender, x=self.goal_front_x, y=self.bottom_post):
+		return defender_stop()
+	    else:
+		return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
+	
+	# ball within the goal range
+	elif has_matched(self.our_defender, x=self.goal_front_x, y=track_y, distance_threshold=20):
+	    return defender_stop()
+	else:
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True)
+
+    def align(self):
+	self.counter = self.counter + 1
+
+	if not self._confuse():
+	    self.current_state = self.TRACK_BALL
+
+	    track_y = self._get_y_within_goal_range(self.ball.y, offset=0)
+
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, distance_threshold=20)
+	    
+	track_y = self._get_y_within_goal_range(self.their_attacker.y, offset=self.threshold)
+
+	if has_matched(self.our_defender, x=self.goal_front_x, y=track_y, distance_threshold=self.threshold):
+	    if self.counter % 2 == 0:
+		self.current_state = self.DOWN
+	    else:
+		self.current_state = self.UP
+	    return defender_stop()
+	else:
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, distance_threshold=self.threshold)
+
+    def up(self):
+	if not self._confuse():
+	    self.current_state = self.TRACK_BALL
+
+	    track_y = self._get_y_within_goal_range(self.ball.y, offset=0)
+
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, distance_threshold=20)
+
+
+	track_y = self._get_y_within_goal_range(self.their_attacker.y + self.distance)
+
+	if has_matched(self.our_defender, x=self.goal_front_x, y=track_y, distance_threshold=self.threshold):
+	    self.current_state = self.ALIGN
+	    return defender_stop()
+	else:
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, distance_threshold=self.threshold)
+    
+    def down(self):
+	if not self._confuse():
+	    self.current_state = self.TRACK_BALL
+
+	    track_y = self._get_y_within_goal_range(self.ball.y, offset=0)
+
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, distance_threshold=20)
+
+	track_y = self._get_y_within_goal_range(self.their_attacker.y - self.distance)
+	
+	if has_matched(self.our_defender, x=self.goal_front_x, y=track_y, distance_threshold=self.threshold):
+	    self.current_state = self.ALIGN
+	    return defender_stop()
+	else:
+	    disp, angle = self.our_defender.get_direction_to_point(self.goal_front_x, track_y)
+	    return calculate_motor_speed(disp, angle, backwards_ok=True, full_speed=True, distance_threshold=self.threshold)
+
+    def _get_y_within_goal_range(self, y, offset=0):
+	if y > self.top_post - offset:
+	    return self.top_post - offset 
+	elif y < self.bottom_post + offset:
+	    return self.bottom_post + offset
+	else:
+	    return y
+
+    def _get_alignment_x(self, side, offset):
+        assert side in self.SIDES
+        if side == self.LEFT:
+            return self.world.our_goal.x + self.GOAL_ALIGN_OFFSET + offset
+        else:
+            return self.world.our_goal.x - self.GOAL_ALIGN_OFFSET - offset
+
+    def _confuse(self):
+	return BallState.lost or has_matched(self.their_attacker, x=self.ball.x, y=self.ball.y, distance_threshold=35)
+
+    def _sideways_safe(self, side):
+	assert side in self.SIDES
+        if side == self.LEFT:
+            return self.our_defender.x < self.center_x
+        else:
+            return self.our_defender.x > self.center_x
+
+###########################################################################
+# END OF USED DEFENDER STRATEGIES
+###########################################################################
 
 class DefenderDefendPenalty(Strategy):
 
