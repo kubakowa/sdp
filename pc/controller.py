@@ -41,6 +41,9 @@ class Controller:
 
         # Set up the Arduino communications
         self.arduino = Arduino(comm_port, 115200, 1, comms)
+	#self.arduino.write("BB_KICK\n")
+	raw_input('Press enter to start')
+	
 
         # Set up camera for frames
         self.camera = Camera(port=video_port, pitch=self.pitch)
@@ -323,6 +326,7 @@ class Arduino:
             if self.serial is None:
                 try:
                     self.serial = serial.Serial(self.port, self.rate, timeout=self.timeout)
+
                 except:
                     print "No Arduino detected!"
                     print "Continuing without comms."
