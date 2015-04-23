@@ -39,5 +39,5 @@ In addition, *serial* library is required.
 
 * At the moment OpenCV + Python are being used. A [book](http://programmingcomputervision.com/downloads/ProgrammingComputerVision_CCdraft.pdf) on Computer Vision with OpenCV in Python is a decent starting point about what OpenCV can do.
 * A detailed tutorial with examples and use cases can be found [here](https://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_tutorials.html) - going through it can be handy to understand the code
-* For OpenCV installation (on DICE) use the script `vision_setup.sh` provided in the root directory.
+* For OpenCV installation (on DICE) use the script **vision_setup.sh** provided in the root directory.
 * After executing the script, run `ipython` and do `import cv2`, if all executes fine then you're set.
