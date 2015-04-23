@@ -2,7 +2,7 @@
 
 *Amanda Tollafield-Small, Kuba Kowalski, Alex Przybylski, Giedrius Zebrauskas, Atanas Dobrev, Fotis Papadogeorgopoulos, Darin Mihov*
 
-Based on Group 7 work from 2014.
+#####Based on Group 7 work from 2014.#####
 ------
 
 ###Future SDP teams
